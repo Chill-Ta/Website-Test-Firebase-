@@ -2,60 +2,25 @@
 
 // app/register/page.tsx
 // ============================================================
-// หน้า Register — สร้างบัญชีผู้ใช้ใหม่
-// Flow:
-//   1. User กรอก email + password
-//   2. Submit → POST http://localhost:3000/register { email, password }
-//   3. Backend สร้าง user ใน Firebase Auth + Firestore
-//   4. แสดง success/error message
+// หน้า Register — Refactored to use Clean Architecture
+// UI rendering remains here, while registration flow logic is
+// delegated to the Presentation Hook (useRegister).
 // ============================================================
 
-import { useState, FormEvent } from "react";
 import Link from "next/link";
-
-const API_BASE = "http://localhost:3000";
+import { useRegister } from "@/presentation/hooks/useRegister";
 
 export default function RegisterPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [message, setMessage] = useState("");
-  const [isError, setIsError] = useState(false);
-  const [loading, setLoading] = useState(false);
-
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault();
-    setMessage("");
-    setIsError(false);
-    setLoading(true);
-
-    try {
-      const res = await fetch(`${API_BASE}/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        // Backend ส่ง error กลับมา (เช่น email ซ้ำ, password สั้นเกิน)
-        setIsError(true);
-        setMessage(data.error || "สมัครสมาชิกไม่สำเร็จ");
-        return;
-      }
-
-      // สมัครสำเร็จ
-      setIsError(false);
-      setMessage(data.message || "สมัครสมาชิกสำเร็จ! กรุณาไปหน้า Login");
-      setEmail("");
-      setPassword("");
-    } catch (err) {
-      setIsError(true);
-      setMessage("ไม่สามารถเชื่อมต่อ Server ได้");
-    } finally {
-      setLoading(false);
-    }
-  }
+  const {
+    email,
+    setEmail,
+    password,
+    setPassword,
+    message,
+    isError,
+    loading,
+    handleSubmit,
+  } = useRegister();
 
   return (
     <div>
@@ -109,3 +74,4 @@ export default function RegisterPage() {
     </div>
   );
 }
+
