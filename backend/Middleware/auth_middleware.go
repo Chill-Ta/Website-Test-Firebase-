@@ -15,6 +15,10 @@ func AuthMiddleware(firebaseAuth *auth.Client) fiber.Handler {
 			return c.Status(401).JSON(fiber.Map{"error": "กรุณา login ก่อน"})
 		}
 
+		if !strings.HasPrefix(authHeader, "Bearer ") {
+			return c.Status(401).JSON(fiber.Map{"error": "invalid authorization format"})
+		}
+
 		idToken := strings.TrimPrefix(authHeader, "Bearer ")
 
 		token, err := firebaseAuth.VerifyIDToken(context.Background(), idToken)

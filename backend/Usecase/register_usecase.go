@@ -3,8 +3,12 @@ package usecases
 import (
 	"context"
 	"errors"
-	domain "login-firebase/Domain"
+	"log"
+	"net/mail"
+	"strings"
 	"time"
+
+	domain "login-firebase/Domain"
 
 	"firebase.google.com/go/v4/auth"
 )
@@ -24,6 +28,18 @@ func NewRegisterUsecase(repo domain.UserRepository, firebaseAuth *auth.Client) d
 func (u *registerUsecase) Register(req domain.RegisterRequest) error {
 	ctx := context.Background()
 
+	// 0. Input Validation
+	req.Email = strings.TrimSpace(req.Email)
+	if req.Email == "" || req.Password == "" {
+		return errors.New("กรุณากรอก email และ password")
+	}
+	if _, err := mail.ParseAddress(req.Email); err != nil {
+		return errors.New("รูปแบบ email ไม่ถูกต้อง")
+	}
+	if len(req.Password) < 6 {
+		return errors.New("password ต้องมีอย่างน้อย 6 ตัวอักษร")
+	}
+
 	// 1. สร้าง user ใน Firebase Auth
 	params := (&auth.UserToCreate{}).
 		Email(req.Email).
@@ -31,7 +47,8 @@ func (u *registerUsecase) Register(req domain.RegisterRequest) error {
 
 	firebaseUser, err := u.firebaseAuth.CreateUser(ctx, params)
 	if err != nil {
-		return errors.New("สมัครสมาชิกไม่สำเร็จ: " + err.Error())
+		log.Printf("Firebase create user error: %v", err)
+		return errors.New("สมัครสมาชิกไม่สำเร็จ")
 	}
 
 	// 2. บันทึกลง Firestore
@@ -43,6 +60,11 @@ func (u *registerUsecase) Register(req domain.RegisterRequest) error {
 	}
 
 	if err := u.userRepo.CreateUser(user); err != nil {
+		// Rollback: ลบ user ออกจาก Firebase Auth เพื่อป้องกัน orphan user
+		if delErr := u.firebaseAuth.DeleteUser(ctx, firebaseUser.UID); delErr != nil {
+			log.Printf("Rollback failed - could not delete Firebase user %s: %v", firebaseUser.UID, delErr)
+		}
+		log.Printf("Firestore create user error: %v", err)
 		return errors.New("บันทึกข้อมูลไม่สำเร็จ")
 	}
 
