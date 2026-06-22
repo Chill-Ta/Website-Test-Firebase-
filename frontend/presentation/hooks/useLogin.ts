@@ -15,8 +15,14 @@ export function useLogin() {
     setLoading(true);
 
     try {
-      await loginUseCase.execute(email, password);
-      router.push("/dashboard");
+      const result = await loginUseCase.execute(email, password);
+
+      // Redirect ตาม role ที่ได้จาก backend
+      if (result.role === "admin") {
+        router.push("/dashboard");
+      } else {
+        router.push("/home");
+      }
     } catch (err: unknown) {
       if (err instanceof Error) {
         const message = err.message;
@@ -47,3 +53,4 @@ export function useLogin() {
     handleSubmit,
   };
 }
+

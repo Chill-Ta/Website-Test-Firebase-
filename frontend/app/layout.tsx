@@ -1,6 +1,8 @@
 // app/layout.tsx
 // Root Layout — โครงสร้างหลักของ App
-// ไม่มี CSS/Style ตามข้อกำหนด
+// ครอบ AuthProvider เพื่อให้ทุกหน้าเข้าถึง user + role ได้
+
+import { AuthProvider } from "@/presentation/context/AuthProvider";
 
 export const metadata = {
   title: "Login Firebase App",
@@ -14,7 +16,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="th">
-      <body>{children}</body>
+      <body>
+        <AuthProvider>{children}</AuthProvider>
+      </body>
     </html>
   );
 }
+

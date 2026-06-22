@@ -2,18 +2,19 @@
 
 // app/dashboard/page.tsx
 // ============================================================
-// หน้า Dashboard — Refactored to use Clean Architecture
-// UI rendering remains here, while all orchestration logic,
-// authentication checking, logout, and protected endpoint fetching
-// are delegated to the Presentation Hook (useDashboard).
+// หน้า Dashboard — เฉพาะ admin เท่านั้น
+// ถ้า student พยายามเข้า → จะถูก redirect ไป /home
 // ============================================================
 
+import Link from "next/link";
+import { useAuth } from "@/presentation/context/AuthProvider";
+import { RouteGuard } from "@/presentation/components/RouteGuard";
 import { useDashboard } from "@/presentation/hooks/useDashboard";
 
-export default function DashboardPage() {
+function DashboardContent() {
+  const { role } = useAuth();
   const {
     user,
-    loading,
     protectedData,
     fetchError,
     fetchLoading,
@@ -21,15 +22,9 @@ export default function DashboardPage() {
     fetchProtectedData,
   } = useDashboard();
 
-  // ─── Loading State ───
-  if (loading) {
-    return <p>กำลังตรวจสอบสถานะ...</p>;
-  }
-
-  // ─── Render Dashboard ───
   return (
     <div>
-      <h1>Dashboard</h1>
+      <h1>📊 Dashboard (Admin)</h1>
 
       <h2>ข้อมูลผู้ใช้</h2>
       <p>
@@ -40,6 +35,9 @@ export default function DashboardPage() {
       </p>
       <p>
         <strong>Email Verified:</strong> {user?.emailVerified ? "✅ Yes" : "❌ No"}
+      </p>
+      <p>
+        <strong>Role:</strong> {role}
       </p>
 
       <hr />
@@ -64,8 +62,32 @@ export default function DashboardPage() {
 
       <hr />
 
+      <h2>เมนู</h2>
+      <ul>
+        <li>
+          <Link href="/home">🏠 Home</Link>
+        </li>
+        <li>
+          <Link href="/profile">👤 Profile</Link>
+        </li>
+        <li>
+          <Link href="/dashboard">📊 Dashboard (Admin)</Link>
+        </li>
+      </ul>
+
+      <hr />
+
       <button onClick={handleLogout}>ออกจากระบบ (Logout)</button>
     </div>
   );
 }
+
+export default function DashboardPage() {
+  return (
+    <RouteGuard allowedRoles={["admin"]}>
+      <DashboardContent />
+    </RouteGuard>
+  );
+}
+
 

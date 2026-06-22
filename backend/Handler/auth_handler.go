@@ -25,12 +25,12 @@ func (h AuthHandler) Login(c fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"error": "invalid request"})
 	}
 
-	uid, err := h.loginUsecase.Authenticate(req)
+	uid, role, err := h.loginUsecase.Authenticate(req)
 	if err != nil {
 		return c.Status(401).JSON(fiber.Map{"error": err.Error()})
 	}
 
-	return c.JSON(fiber.Map{"uid": uid})
+	return c.JSON(fiber.Map{"uid": uid, "role": role})
 }
 
 func (h AuthHandler) Register(c fiber.Ctx) error {

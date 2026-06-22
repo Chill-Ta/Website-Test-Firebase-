@@ -16,7 +16,7 @@ export class FirebaseAuthRepository implements AuthRepository {
     };
   }
 
-  async login(email: string, password: string): Promise<{ uid: string; idToken: string }> {
+  async login(email: string, password: string): Promise<{ uid: string; idToken: string; role: string }> {
     const userCredential = await signInWithEmailAndPassword(this.auth, email, password);
     const firebaseUser = userCredential.user;
     const idToken = await firebaseUser.getIdToken();
@@ -32,7 +32,7 @@ export class FirebaseAuthRepository implements AuthRepository {
       throw new Error(data.error || "เข้าสู่ระบบไม่สำเร็จ");
     }
 
-    return { uid: data.uid, idToken };
+    return { uid: data.uid, idToken, role: data.role };
   }
 
   async register(email: string, password: string): Promise<{ message: string }> {
@@ -70,7 +70,7 @@ export class FirebaseAuthRepository implements AuthRepository {
     return user.getIdToken(forceRefresh);
   }
 
-  async fetchProfile(idToken: string): Promise<{ uid: string; message: string }> {
+  async fetchProfile(idToken: string): Promise<{ uid: string; message: string; role: string }> {
     const res = await fetch(`${this.apiBase}/me`, {
       method: "GET",
       headers: {
@@ -84,6 +84,6 @@ export class FirebaseAuthRepository implements AuthRepository {
       throw new Error(data.error || "ไม่สามารถดึงข้อมูลได้");
     }
 
-    return { uid: data.uid, message: data.message };
+    return { uid: data.uid, message: data.message, role: data.role };
   }
 }

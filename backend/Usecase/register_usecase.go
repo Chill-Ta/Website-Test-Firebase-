@@ -55,6 +55,7 @@ func (u *registerUsecase) Register(req domain.RegisterRequest) error {
 	user := &domain.User{
 		FirebaseUID: firebaseUser.UID,
 		Email:       req.Email,
+		Role:        "student",
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
 	}

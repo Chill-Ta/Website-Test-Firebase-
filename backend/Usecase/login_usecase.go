@@ -20,26 +20,21 @@ func NewLoginUsecase(repo domain.UserRepository, firebaseAuth *auth.Client) doma
 	}
 }
 
-func (u *loginUsecase) Authenticate(req domain.LoginRequest) (string, error) {
+func (u *loginUsecase) Authenticate(req domain.LoginRequest) (string, string, error) {
 	ctx := context.Background()
 
 	// 1. Verify Firebase ID Token
 	token, err := u.firebaseAuth.VerifyIDToken(ctx, req.IDToken)
 	if err != nil {
-		return "", errors.New("token ไม่ถูกต้อง")
+		return "", "", errors.New("token ไม่ถูกต้อง")
 	}
 
-	// 2. ดึง email จาก token
-	email, ok := token.Claims["email"].(string)
-	if !ok {
-		return "", errors.New("ไม่พบอีเมลใน token")
-	}
-
-	// 3. เช็คว่ามี user ใน Firestore ไหม
-	_, err = u.userRepo.GetByEmail(email)
+	// 2. ดึง user จาก Firestore ด้วย UID (เร็วกว่า query by email)
+	user, err := u.userRepo.GetByUID(token.UID)
 	if err != nil {
-		return "", errors.New("ไม่พบผู้ใช้ในระบบ")
+		return "", "", errors.New("ไม่พบผู้ใช้ในระบบ")
 	}
 
-	return token.UID, nil
+	// 3. return uid + role
+	return token.UID, user.Role, nil
 }

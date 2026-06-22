@@ -35,6 +35,21 @@ func (r *userRepository) GetByEmail(email string) (*domain.User, error) {
 	return &user, nil
 }
 
+// GetByUID — ดึงข้อมูล user จาก Firestore โดยใช้ Firebase UID (document ID)
+func (r *userRepository) GetByUID(uid string) (*domain.User, error) {
+	ctx := context.Background()
+	doc, err := r.db.Collection("users").Doc(uid).Get(ctx)
+	if err != nil {
+		return nil, errors.New("ไม่พบผู้ใช้")
+	}
+
+	var user domain.User
+	if err := doc.DataTo(&user); err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
 func (r *userRepository) CreateUser(user *domain.User) error {
 	ctx := context.Background()
 	_, err := r.db.Collection("users").Doc(user.FirebaseUID).Set(ctx, user)

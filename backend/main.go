@@ -72,16 +72,34 @@ func main() {
 	// 7. Protected routes (ต้อง login)
 	app.Use(middleware.AuthMiddleware(firebaseAuth))
 
-	// Protected: ดึงข้อมูลผู้ใช้ปัจจุบัน
+	// Protected: ดึงข้อมูลผู้ใช้ปัจจุบัน (รวม role)
 	app.Get("/me", func(c fiber.Ctx) error {
 		uid := c.Locals("uid").(string)
+
+		// ดึง role จาก Firestore
+		doc, err := firestoreClient.Collection("users").Doc(uid).Get(context.Background())
+		if err != nil {
+			return c.Status(500).JSON(fiber.Map{"error": "ไม่สามารถดึงข้อมูลผู้ใช้ได้"})
+		}
+		role, _ := doc.Data()["role"].(string)
+
 		return c.JSON(fiber.Map{
 			"uid":     uid,
+			"role":    role,
 			"message": "authenticated successfully",
 		})
 	})
 
-	// 8. Start Server
+	// 8. Admin-only routes (ต้องมี role = "admin")
+	adminGroup := app.Group("/admin", middleware.RequireRole(firestoreClient, "admin"))
+	adminGroup.Get("/dashboard", func(c fiber.Ctx) error {
+		return c.JSON(fiber.Map{
+			"message": "Welcome to admin dashboard",
+			"role":    c.Locals("role"),
+		})
+	})
+
+	// 9. Start Server
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "3000"
