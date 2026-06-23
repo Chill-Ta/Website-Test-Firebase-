@@ -29,13 +29,16 @@ export function RouteGuard({ children, allowedRoles }: RouteGuardProps) {
       return;
     }
 
-    // เช็ค role — ถ้าไม่มีสิทธิ์ → redirect ตาม role
-    if (role && !allowedRoles.includes(role)) {
-      if (role === "student") {
-        router.push("/home");
-      } else {
-        router.push("/login");
-      }
+    // role ยังเป็น null → ดึง role จาก backend ไม่สำเร็จ → ไปหน้า login
+    // ป้องกันไม่ให้เข้าถึง protected content โดยไม่ผ่านการยืนยัน role จาก backend
+    if (!role) {
+      router.push("/login");
+      return;
+    }
+
+    // มี role แล้วแต่ไม่มีสิทธิ์ → redirect ไปหน้าที่เหมาะสม
+    if (!allowedRoles.includes(role)) {
+      router.push("/home");
     }
   }, [user, role, loading, allowedRoles, router]);
 
@@ -44,8 +47,9 @@ export function RouteGuard({ children, allowedRoles }: RouteGuardProps) {
     return <p>กำลังตรวจสอบสิทธิ์...</p>;
   }
 
-  // ยังไม่ login หรือ role ไม่ตรง → ไม่แสดง content (รอ redirect)
-  if (!user || (role && !allowedRoles.includes(role))) {
+  // ยังไม่ login หรือ role เป็น null หรือ role ไม่ตรง → ไม่แสดง content (รอ redirect)
+  // สำคัญ: ต้องเช็ค !role ด้วย เพื่อไม่ให้ content หลุดออกไปก่อน backend ยืนยัน role
+  if (!user || !role || !allowedRoles.includes(role)) {
     return <p>กำลังตรวจสอบสิทธิ์...</p>;
   }
 

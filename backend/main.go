@@ -48,6 +48,8 @@ func main() {
 	loginUsecase := usecase.NewLoginUsecase(userRepo, firebaseAuth)
 	registerUsecase := usecase.NewRegisterUsecase(userRepo, firebaseAuth)
 	authHandler := handler.NewAuthHandler(loginUsecase, registerUsecase)
+	adminUsecase := usecase.NewAdminUsecase(userRepo)
+	adminHandler := handler.NewAdminHandler(adminUsecase)
 
 	// 5. Fiber App
 	app := fiber.New()
@@ -98,6 +100,7 @@ func main() {
 			"role":    c.Locals("role"),
 		})
 	})
+	adminGroup.Get("/users", adminHandler.GetAllUsers)
 
 	// 9. Start Server
 	port := os.Getenv("PORT")

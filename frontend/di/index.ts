@@ -5,6 +5,7 @@ import { RegisterUseCase } from "@/domain/use-cases/register.use-case";
 import { LogoutUseCase } from "@/domain/use-cases/logout.use-case";
 import { GetCurrentUserUseCase } from "@/domain/use-cases/get-current-user.use-case";
 import { FetchProfileUseCase } from "@/domain/use-cases/fetch-profile.use-case";
+import { FetchUsersUseCase } from "@/domain/use-cases/fetch-users.use-case";
 
 const authRepository = new FirebaseAuthRepository(auth);
 
@@ -13,3 +14,4 @@ export const registerUseCase = new RegisterUseCase(authRepository);
 export const logoutUseCase = new LogoutUseCase(authRepository);
 export const getCurrentUserUseCase = new GetCurrentUserUseCase(authRepository);
 export const fetchProfileUseCase = new FetchProfileUseCase(authRepository);
+export const fetchUsersUseCase = new FetchUsersUseCase(authRepository);

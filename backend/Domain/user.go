@@ -3,11 +3,11 @@ package domain
 import "time"
 
 type User struct {
-	FirebaseUID string    `firestore:"firebase_uid"`
-	Email       string    `firestore:"email"`
-	Role        string    `firestore:"role"`
-	CreatedAt   time.Time `firestore:"created_at"`
-	UpdatedAt   time.Time `firestore:"updated_at"`
+	FirebaseUID string    `firestore:"firebase_uid" json:"firebase_uid"`
+	Email       string    `firestore:"email" json:"email"`
+	Role        string    `firestore:"role" json:"role"`
+	CreatedAt   time.Time `firestore:"created_at" json:"created_at"`
+	UpdatedAt   time.Time `firestore:"updated_at" json:"updated_at"`
 }
 
 type LoginRequest struct {
@@ -29,6 +29,7 @@ type UserRepository interface {
 	GetByEmail(email string) (*User, error)
 	GetByUID(uid string) (*User, error)
 	CreateUser(user *User) error
+	GetAllUsers() ([]*User, error)
 }
 
 type LoginUsecase interface {
@@ -38,4 +39,8 @@ type LoginUsecase interface {
 
 type RegisterUsecase interface {
 	Register(req RegisterRequest) error
+}
+
+type AdminUsecase interface {
+	GetAllUsers() ([]*User, error)
 }

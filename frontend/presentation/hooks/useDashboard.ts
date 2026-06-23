@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { User } from "@/domain/entities/user.entity";
-import { getCurrentUserUseCase, logoutUseCase, fetchProfileUseCase } from "@/di";
+import { getCurrentUserUseCase, logoutUseCase, fetchProfileUseCase, fetchUsersUseCase } from "@/di";
 
 export function useDashboard() {
   const router = useRouter();
@@ -10,6 +10,11 @@ export function useDashboard() {
   const [protectedData, setProtectedData] = useState<string>("");
   const [fetchError, setFetchError] = useState("");
   const [fetchLoading, setFetchLoading] = useState(false);
+
+  // States for fetching all users
+  const [usersList, setUsersList] = useState<User[]>([]);
+  const [usersLoading, setUsersLoading] = useState(false);
+  const [usersError, setUsersError] = useState("");
 
   useEffect(() => {
     const unsubscribe = getCurrentUserUseCase.subscribe((currentUser) => {
@@ -54,6 +59,23 @@ export function useDashboard() {
     }
   }
 
+  async function fetchUsersList() {
+    setUsersError("");
+    setUsersLoading(true);
+    try {
+      const list = await fetchUsersUseCase.execute();
+      setUsersList(list);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setUsersError(err.message);
+      } else {
+        setUsersError("ไม่สามารถดึงข้อมูลรายชื่อผู้ใช้ได้");
+      }
+    } finally {
+      setUsersLoading(false);
+    }
+  }
+
   return {
     user,
     loading,
@@ -62,5 +84,9 @@ export function useDashboard() {
     fetchLoading,
     handleLogout,
     fetchProtectedData,
+    usersList,
+    usersLoading,
+    usersError,
+    fetchUsersList,
   };
 }

@@ -55,3 +55,24 @@ func (r *userRepository) CreateUser(user *domain.User) error {
 	_, err := r.db.Collection("users").Doc(user.FirebaseUID).Set(ctx, user)
 	return err
 }
+
+func (r *userRepository) GetAllUsers() ([]*domain.User, error) {
+	ctx := context.Background()
+	iter := r.db.Collection("users").Documents(ctx)
+	var users []*domain.User
+	for {
+		doc, err := iter.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+		var user domain.User
+		if err := doc.DataTo(&user); err != nil {
+			return nil, err
+		}
+		users = append(users, &user)
+	}
+	return users, nil
+}

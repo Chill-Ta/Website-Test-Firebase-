@@ -47,6 +47,9 @@ func (u *registerUsecase) Register(req domain.RegisterRequest) error {
 
 	firebaseUser, err := u.firebaseAuth.CreateUser(ctx, params)
 	if err != nil {
+		if auth.IsEmailAlreadyExists(err) {
+			return errors.New("อีเมล์นี้มีบัญชีในระบบแล้ว")
+		}
 		log.Printf("Firebase create user error: %v", err)
 		return errors.New("สมัครสมาชิกไม่สำเร็จ")
 	}

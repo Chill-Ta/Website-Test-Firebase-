@@ -86,4 +86,28 @@ export class FirebaseAuthRepository implements AuthRepository {
 
     return { uid: data.uid, message: data.message, role: data.role };
   }
+
+  async fetchUsers(idToken: string): Promise<User[]> {
+    const res = await fetch(`${this.apiBase}/admin/users`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${idToken}`,
+      },
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.error || "ไม่สามารถดึงข้อมูลรายชื่อผู้ใช้ได้");
+    }
+
+    return data.map((item: any) => ({
+      uid: item.firebase_uid || item.uid || "",
+      email: item.email || "",
+      role: item.role || "",
+      createdAt: item.created_at || "",
+      updatedAt: item.updated_at || "",
+      emailVerified: false,
+    }));
+  }
 }

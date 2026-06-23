@@ -8,5 +8,6 @@ export interface AuthRepository {
   onAuthStateChanged(callback: (user: User | null) => void): () => void;
   getIdToken(forceRefresh?: boolean): Promise<string>;
   fetchProfile(idToken: string): Promise<{ uid: string; message: string; role: string }>;
+  fetchUsers(idToken: string): Promise<User[]>;
 }
 

@@ -36,17 +36,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const unsubscribe = getCurrentUserUseCase.subscribe(async (currentUser) => {
       if (currentUser) {
         setUser(currentUser);
+        // ตั้ง loading = true ใหม่ทุกครั้งที่ auth state เปลี่ยน
+        // เพื่อให้ RouteGuard รอจนกว่า backend จะยืนยัน role เสร็จ
+        // แก้ race condition: onAuthStateChanged ยิงครั้งแรกด้วย null (loading=false)
+        // แล้วยิงครั้งที่ 2 ด้วย user → ถ้าไม่ reset loading, RouteGuard จะเห็น
+        // loading=false + role=null แล้วเตะไป /login ก่อนที่จะดึง role เสร็จ
+        setLoading(true);
 
-        try {
-          // ดึง role จาก backend (GET /me)
-          const profile = await fetchProfileUseCase.execute();
-          setRole(profile.role || "student");
-          setUser((prev) =>
-            prev ? { ...prev, role: profile.role || "student" } : prev
-          );
-        } catch {
-          // ถ้าดึง role ไม่ได้ ให้ default เป็น student
-          setRole("student");
+        // ดึง role จาก backend (GET /me)
+        // Frontend ไม่มีสิทธิ์กำหนด role เอง — ต้องได้จาก backend เท่านั้น
+        // ใช้ retry เพื่อรองรับกรณี refresh หน้า ที่ Firebase SDK อาจยังเตรียม token ไม่เสร็จ
+        const MAX_RETRIES = 2;
+        let fetched = false;
+
+        for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+          try {
+            const profile = await fetchProfileUseCase.execute();
+            if (profile.role) {
+              setRole(profile.role);
+              setUser((prev) =>
+                prev ? { ...prev, role: profile.role } : prev
+              );
+              fetched = true;
+              break;
+            }
+          } catch {
+            // ถ้ายังเหลือรอบ retry → รอ 1 วินาทีแล้วลองใหม่
+            if (attempt < MAX_RETRIES) {
+              await new Promise((r) => setTimeout(r, 1000));
+            }
+          }
+        }
+
+        if (!fetched) {
+          // retry ครบแล้วยังไม่สำเร็จ → ไม่ให้สิทธิ์ใดๆ (role = null)
+          // ป้องกันการโจมตีด้วยการตัด network เพื่อ bypass role check
+          setRole(null);
         }
       } else {
         setUser(null);

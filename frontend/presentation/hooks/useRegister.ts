@@ -1,7 +1,9 @@
 import { useState, FormEvent } from "react";
+import { useRouter } from "next/navigation";
 import { registerUseCase } from "@/di";
 
 export function useRegister() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
@@ -20,6 +22,11 @@ export function useRegister() {
       setMessage(data.message);
       setEmail("");
       setPassword("");
+      
+      // Redirect ไปหน้า login หลังสมัครสมาชิกสำเร็จ (หน่วงเวลา 1.5 วินาทีเพื่อให้ผู้ใช้เห็นข้อความสำเร็จ)
+      setTimeout(() => {
+        router.push("/login");
+      }, 1500);
     } catch (err: unknown) {
       setIsError(true);
       if (err instanceof Error) {
