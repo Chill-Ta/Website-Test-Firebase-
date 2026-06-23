@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { User } from "@/domain/entities/user.entity";
 import { getCurrentUserUseCase, logoutUseCase, fetchProfileUseCase, fetchUsersUseCase } from "@/di";
+import { sanitizeError } from "@/lib/error-helper";
 
 export function useDashboard() {
   const router = useRouter();
@@ -49,11 +50,7 @@ export function useDashboard() {
       const data = await fetchProfileUseCase.execute();
       setProtectedData(JSON.stringify(data, null, 2));
     } catch (err: unknown) {
-      if (err instanceof Error) {
-        setFetchError(err.message);
-      } else {
-        setFetchError("ไม่สามารถเชื่อมต่อ Server ได้");
-      }
+      setFetchError(sanitizeError(err, "admin"));
     } finally {
       setFetchLoading(false);
     }
@@ -66,11 +63,7 @@ export function useDashboard() {
       const list = await fetchUsersUseCase.execute();
       setUsersList(list);
     } catch (err: unknown) {
-      if (err instanceof Error) {
-        setUsersError(err.message);
-      } else {
-        setUsersError("ไม่สามารถดึงข้อมูลรายชื่อผู้ใช้ได้");
-      }
+      setUsersError(sanitizeError(err, "admin"));
     } finally {
       setUsersLoading(false);
     }

@@ -1,6 +1,7 @@
 import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { registerUseCase } from "@/di";
+import { sanitizeError } from "@/lib/error-helper";
 
 export function useRegister() {
   const router = useRouter();
@@ -29,11 +30,7 @@ export function useRegister() {
       }, 1500);
     } catch (err: unknown) {
       setIsError(true);
-      if (err instanceof Error) {
-        setMessage(err.message);
-      } else {
-        setMessage("ไม่สามารถเชื่อมต่อ Server ได้");
-      }
+      setMessage(sanitizeError(err));
     } finally {
       setLoading(false);
     }

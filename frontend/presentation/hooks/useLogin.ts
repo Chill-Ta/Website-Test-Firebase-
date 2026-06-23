@@ -1,6 +1,7 @@
 import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { loginUseCase } from "@/di";
+import { sanitizeError } from "@/lib/error-helper";
 
 export function useLogin() {
   const router = useRouter();
@@ -24,20 +25,7 @@ export function useLogin() {
         router.push("/home");
       }
     } catch (err: unknown) {
-      if (err instanceof Error) {
-        const message = err.message;
-        if (message.includes("user-not-found")) {
-          setError("ไม่พบบัญชีผู้ใช้นี้");
-        } else if (message.includes("wrong-password") || message.includes("invalid-credential")) {
-          setError("อีเมลหรือรหัสผ่านไม่ถูกต้อง");
-        } else if (message.includes("too-many-requests")) {
-          setError("มีการพยายามเข้าสู่ระบบมากเกินไป กรุณารอสักครู่");
-        } else {
-          setError(message);
-        }
-      } else {
-        setError("เกิดข้อผิดพลาดที่ไม่คาดคิด");
-      }
+      setError(sanitizeError(err));
     } finally {
       setLoading(false);
     }
