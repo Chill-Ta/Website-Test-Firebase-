@@ -1,26 +1,31 @@
-package usecases
+package application
 
 import (
 	"context"
 	"errors"
-	domain "login-firebase/Domain"
 
 	"firebase.google.com/go/v4/auth"
+	"login-firebase/internal/modules/user/domain"
 )
+
+type LoginUsecase interface {
+	Authenticate(req LoginRequest) (string, string, error)
+	GetUserProfile(uid string) (*domain.User, error)
+}
 
 type loginUsecase struct {
 	userRepo     domain.UserRepository
 	firebaseAuth *auth.Client
 }
 
-func NewLoginUsecase(repo domain.UserRepository, firebaseAuth *auth.Client) domain.LoginUsecase {
+func NewLoginUsecase(repo domain.UserRepository, firebaseAuth *auth.Client) LoginUsecase {
 	return &loginUsecase{
 		userRepo:     repo,
 		firebaseAuth: firebaseAuth,
 	}
 }
 
-func (u *loginUsecase) Authenticate(req domain.LoginRequest) (string, string, error) {
+func (u *loginUsecase) Authenticate(req LoginRequest) (string, string, error) {
 	ctx := context.Background()
 
 	// 1. Verify Firebase ID Token
@@ -37,4 +42,8 @@ func (u *loginUsecase) Authenticate(req domain.LoginRequest) (string, string, er
 
 	// 3. return uid + role
 	return token.UID, user.Role, nil
+}
+
+func (u *loginUsecase) GetUserProfile(uid string) (*domain.User, error) {
+	return u.userRepo.GetByUID(uid)
 }

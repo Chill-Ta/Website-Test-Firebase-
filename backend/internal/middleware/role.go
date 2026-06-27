@@ -2,40 +2,13 @@ package middleware
 
 import (
 	"context"
-	"strings"
 
 	"cloud.google.com/go/firestore"
-	"firebase.google.com/go/v4/auth"
 	"github.com/gofiber/fiber/v3"
 )
 
-// AuthMiddleware — ตรวจสอบ Firebase ID Token จาก Authorization header
-func AuthMiddleware(firebaseAuth *auth.Client) fiber.Handler {
-	return func(c fiber.Ctx) error {
-		authHeader := c.Get("Authorization")
-		if authHeader == "" {
-			return c.Status(401).JSON(fiber.Map{"error": "กรุณา login ก่อน"})
-		}
-
-		if !strings.HasPrefix(authHeader, "Bearer ") {
-			return c.Status(401).JSON(fiber.Map{"error": "invalid authorization format"})
-		}
-
-		idToken := strings.TrimPrefix(authHeader, "Bearer ")
-
-		token, err := firebaseAuth.VerifyIDToken(context.Background(), idToken)
-		if err != nil {
-			return c.Status(401).JSON(fiber.Map{"error": "token ไม่ถูกต้อง"})
-		}
-
-		c.Locals("uid", token.UID)
-		return c.Next()
-	}
-}
-
 // RequireRole — ตรวจสอบ Role ของ User จาก Firestore
 // ใช้ต่อจาก AuthMiddleware เสมอ (ต้องมี uid ใน Locals แล้ว)
-// ตัวอย่างการใช้: app.Get("/admin/dashboard", middleware.RequireRole(firestoreClient, "admin"), handler)
 func RequireRole(firestoreClient *firestore.Client, allowedRoles ...string) fiber.Handler {
 	return func(c fiber.Ctx) error {
 		uid, ok := c.Locals("uid").(string)

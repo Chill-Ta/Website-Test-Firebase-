@@ -1,4 +1,4 @@
-package usecases
+package application
 
 import (
 	"context"
@@ -8,24 +8,27 @@ import (
 	"strings"
 	"time"
 
-	domain "login-firebase/Domain"
-
 	"firebase.google.com/go/v4/auth"
+	"login-firebase/internal/modules/user/domain"
 )
+
+type RegisterUsecase interface {
+	Register(req RegisterRequest) error
+}
 
 type registerUsecase struct {
 	userRepo     domain.UserRepository
 	firebaseAuth *auth.Client
 }
 
-func NewRegisterUsecase(repo domain.UserRepository, firebaseAuth *auth.Client) domain.RegisterUsecase {
+func NewRegisterUsecase(repo domain.UserRepository, firebaseAuth *auth.Client) RegisterUsecase {
 	return &registerUsecase{
 		userRepo:     repo,
 		firebaseAuth: firebaseAuth,
 	}
 }
 
-func (u *registerUsecase) Register(req domain.RegisterRequest) error {
+func (u *registerUsecase) Register(req RegisterRequest) error {
 	ctx := context.Background()
 
 	// 0. Input Validation

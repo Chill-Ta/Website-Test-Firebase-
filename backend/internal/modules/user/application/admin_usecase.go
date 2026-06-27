@@ -1,14 +1,18 @@
-package usecases
+package application
 
 import (
-	domain "login-firebase/Domain"
+	"login-firebase/internal/modules/user/domain"
 )
+
+type AdminUsecase interface {
+	GetAllUsers() ([]*domain.User, error)
+}
 
 type adminUsecase struct {
 	userRepo domain.UserRepository
 }
 
-func NewAdminUsecase(userRepo domain.UserRepository) domain.AdminUsecase {
+func NewAdminUsecase(userRepo domain.UserRepository) AdminUsecase {
 	return &adminUsecase{
 		userRepo: userRepo,
 	}

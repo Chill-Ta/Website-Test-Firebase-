@@ -6,10 +6,7 @@ import (
 	"os"
 	"time"
 
-	handler "login-firebase/Handler"
-	middleware "login-firebase/Middleware"
-	repository "login-firebase/Repository"
-	usecase "login-firebase/Usecase"
+	"login-firebase/internal/modules/user"
 
 	firebase "firebase.google.com/go/v4"
 	"github.com/gofiber/fiber/v3"
@@ -43,66 +40,26 @@ func main() {
 	}
 	defer firestoreClient.Close()
 
-	// 4. Dependency Injection
-	userRepo := repository.NewUserRepository(firestoreClient)
-	loginUsecase := usecase.NewLoginUsecase(userRepo, firebaseAuth)
-	registerUsecase := usecase.NewRegisterUsecase(userRepo, firebaseAuth)
-	authHandler := handler.NewAuthHandler(loginUsecase, registerUsecase)
-	adminUsecase := usecase.NewAdminUsecase(userRepo)
-	adminHandler := handler.NewAdminHandler(adminUsecase)
-
-	// 5. Fiber App
+	// 4. Fiber App
 	app := fiber.New()
 
-	// 5.1 CORS — อนุญาต Frontend (Next.js) เข้าถึง API
+	// 4.1 CORS — อนุญาต Frontend (Next.js) เข้าถึง API
 	app.Use(cors.New(cors.Config{
 		AllowOrigins: []string{"http://localhost:3001"},
 		AllowHeaders: []string{"Content-Type", "Authorization"},
 		AllowMethods: []string{"GET", "POST", "PUT", "DELETE"},
 	}))
 
-	// 5.2 Rate Limiter — ป้องกัน brute force
+	// 4.2 Rate Limiter — ป้องกัน brute force
 	app.Use(limiter.New(limiter.Config{
 		Max:        20,
 		Expiration: 60 * time.Second,
 	}))
 
-	// 6. Public routes
-	app.Post("/register", authHandler.Register)
-	app.Post("/login", authHandler.Login)
+	// 5. Register User module routes
+	user.Register(app, firestoreClient, firebaseAuth)
 
-	// 7. Protected routes (ต้อง login)
-	app.Use(middleware.AuthMiddleware(firebaseAuth))
-
-	// Protected: ดึงข้อมูลผู้ใช้ปัจจุบัน (รวม role)
-	app.Get("/me", func(c fiber.Ctx) error {
-		uid := c.Locals("uid").(string)
-
-		// ดึง role จาก Firestore
-		doc, err := firestoreClient.Collection("users").Doc(uid).Get(context.Background())
-		if err != nil {
-			return c.Status(500).JSON(fiber.Map{"error": "ไม่สามารถดึงข้อมูลผู้ใช้ได้"})
-		}
-		role, _ := doc.Data()["role"].(string)
-
-		return c.JSON(fiber.Map{
-			"uid":     uid,
-			"role":    role,
-			"message": "authenticated successfully",
-		})
-	})
-
-	// 8. Admin-only routes (ต้องมี role = "admin")
-	adminGroup := app.Group("/admin", middleware.RequireRole(firestoreClient, "admin"))
-	adminGroup.Get("/dashboard", func(c fiber.Ctx) error {
-		return c.JSON(fiber.Map{
-			"message": "Welcome to admin dashboard",
-			"role":    c.Locals("role"),
-		})
-	})
-	adminGroup.Get("/users", adminHandler.GetAllUsers)
-
-	// 9. Start Server
+	// 6. Start Server
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "3000"

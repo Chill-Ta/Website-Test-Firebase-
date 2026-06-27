@@ -1,12 +1,12 @@
-package repository
+package firestore
 
 import (
 	"context"
 	"errors"
-	domain "login-firebase/Domain"
 
 	"cloud.google.com/go/firestore"
 	"google.golang.org/api/iterator"
+	"login-firebase/internal/modules/user/domain"
 )
 
 type userRepository struct {
