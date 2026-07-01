@@ -1,7 +1,15 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { User } from "@/domain/entities/user.entity";
-import { getCurrentUserUseCase, logoutUseCase, fetchProfileUseCase, fetchUsersUseCase } from "@/di";
+import {
+	getCurrentUserUseCase,
+	logoutUseCase,
+	fetchProfileUseCase,
+	fetchUsersUseCase,
+	fetchContactsUseCase,
+	replyContactUseCase,
+	authRepository,
+} from "@/di";
 import { sanitizeError } from "@/lib/error-helper";
 
 export function useDashboard() {
@@ -16,6 +24,11 @@ export function useDashboard() {
   const [usersList, setUsersList] = useState<User[]>([]);
   const [usersLoading, setUsersLoading] = useState(false);
   const [usersError, setUsersError] = useState("");
+
+  // States for fetching contact submissions
+  const [contactsList, setContactsList] = useState<any[]>([]);
+  const [contactsLoading, setContactsLoading] = useState(false);
+  const [contactsError, setContactsError] = useState("");
 
   useEffect(() => {
     const unsubscribe = getCurrentUserUseCase.subscribe((currentUser) => {
@@ -69,6 +82,30 @@ export function useDashboard() {
     }
   }
 
+  async function fetchContactsList() {
+    setContactsError("");
+    setContactsLoading(true);
+    try {
+      const idToken = await authRepository.getIdToken();
+      const list = await fetchContactsUseCase.execute(idToken);
+      setContactsList(list);
+    } catch (err: unknown) {
+      setContactsError(sanitizeError(err, "admin"));
+    } finally {
+      setContactsLoading(false);
+    }
+  }
+
+  async function replyToContact(id: string, status: string, reply: string) {
+    try {
+      const idToken = await authRepository.getIdToken();
+      await replyContactUseCase.execute(idToken, id, status, reply);
+      await fetchContactsList();
+    } catch (err: unknown) {
+      throw new Error(sanitizeError(err, "admin"));
+    }
+  }
+
   return {
     user,
     loading,
@@ -81,5 +118,10 @@ export function useDashboard() {
     usersLoading,
     usersError,
     fetchUsersList,
+    contactsList,
+    contactsLoading,
+    contactsError,
+    fetchContactsList,
+    replyToContact,
   };
 }

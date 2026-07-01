@@ -18,12 +18,8 @@ export function useLogin() {
     try {
       const result = await loginUseCase.execute(email, password);
 
-      // Redirect ตาม role ที่ได้จาก backend
-      if (result.role === "admin") {
-        router.push("/dashboard");
-      } else {
-        router.push("/home");
-      }
+      // Redirect ไปหน้า home เสมอเมื่อ login สำเร็จ
+      router.push("/home");
     } catch (err: unknown) {
       setError(sanitizeError(err));
     } finally {

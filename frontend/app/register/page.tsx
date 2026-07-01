@@ -23,15 +23,15 @@ export default function RegisterPage() {
   } = useRegister();
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4">
-      <div className="glass-panel w-full max-w-md rounded-2xl p-8 animate-fade-in">
-        <h1 className="text-3xl font-extrabold text-center bg-gradient-to-r from-indigo-400 to-violet-400 bg-clip-text text-transparent mb-8">
+    <div className="flex min-h-screen items-center justify-center p-4 bg-gradient-to-b from-[#FCEFF4] via-white to-white text-[#404041]">
+      <div className="bg-white/90 backdrop-blur-md border border-[#F5CDDC] w-full max-w-md rounded-3xl p-8 shadow-xl shadow-[#DE5D8F]/5 animate-fade-in">
+        <h1 className="text-3xl font-extrabold text-center bg-gradient-to-r from-[#DE5D8F] to-[#E992B4] bg-clip-text text-transparent mb-8 font-serif">
           สมัครสมาชิก (Register)
         </h1>
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label htmlFor="email" className="block text-sm font-semibold text-slate-300 mb-2">
+            <label htmlFor="email" className="block text-sm font-bold text-slate-500 mb-2">
               Email Address
             </label>
             <input
@@ -40,13 +40,13 @@ export default function RegisterPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="custom-input"
+              className="w-full bg-slate-50 border border-slate-300 focus:border-[#DE5D8F] focus:ring-1 focus:ring-[#DE5D8F] rounded-xl px-4 py-3 text-sm text-[#404041] outline-none transition-all placeholder-slate-400"
               placeholder="example@mail.com"
             />
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-semibold text-slate-300 mb-2">
+            <label htmlFor="password" className="block text-sm font-bold text-slate-500 mb-2">
               Password
             </label>
             <input
@@ -55,7 +55,7 @@ export default function RegisterPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="custom-input"
+              className="w-full bg-slate-50 border border-slate-300 focus:border-[#DE5D8F] focus:ring-1 focus:ring-[#DE5D8F] rounded-xl px-4 py-3 text-sm text-[#404041] outline-none transition-all placeholder-slate-400"
               placeholder="อย่างน้อย 6 ตัวอักษร"
               minLength={6}
             />
@@ -64,7 +64,7 @@ export default function RegisterPage() {
           <button
             type="submit"
             disabled={loading}
-            className="btn-primary w-full py-3 font-semibold mt-4 flex items-center justify-center gap-2"
+            className="w-full py-3 bg-gradient-to-r from-[#DE5D8F] to-[#E992B4] hover:from-[#DE5D8F]/95 hover:to-[#E992B4]/95 text-white font-bold rounded-xl shadow-md hover:shadow-lg hover:scale-[1.01] active:scale-[0.99] transition-all cursor-pointer mt-4 flex items-center justify-center gap-2 disabled:opacity-60"
           >
             {loading ? (
               <>
@@ -82,10 +82,10 @@ export default function RegisterPage() {
 
         {message && (
           <div
-            className={`mt-4 p-3 border rounded-xl text-sm text-center ${
+            className={`mt-4 p-3 border rounded-xl text-sm text-center font-semibold animate-fade-in ${
               isError
-                ? "bg-red-950/40 border-red-500/20 text-red-400"
-                : "bg-green-950/40 border-green-500/20 text-green-400"
+                ? "bg-red-50 border-red-200 text-red-600"
+                : "bg-emerald-50 border-emerald-200 text-emerald-600"
             }`}
           >
             {message}
@@ -94,7 +94,7 @@ export default function RegisterPage() {
 
         <div className="mt-8 text-center text-sm text-slate-400">
           มีบัญชีแล้ว?{" "}
-          <Link href="/login" className="text-indigo-400 hover:text-indigo-300 font-semibold transition-colors">
+          <Link href="/login" className="text-[#DE5D8F] hover:text-[#DE5D8F]/80 font-bold transition-colors underline">
             เข้าสู่ระบบ
           </Link>
         </div>

@@ -4,7 +4,7 @@ import (
 	"cloud.google.com/go/firestore"
 	"firebase.google.com/go/v4/auth"
 	"github.com/gofiber/fiber/v3"
-	"login-firebase/internal/middleware"
+	"login-firebase/internal/modules/user/middleware"
 )
 
 func RegisterRoutes(
@@ -19,8 +19,7 @@ func RegisterRoutes(
 	router.Post("/login", authHandler.Login)
 
 	// 2. Protected routes (ต้อง login)
-	protected := router.Group("", middleware.AuthMiddleware(firebaseAuth))
-	protected.Get("/me", authHandler.Me)
+	router.Get("/me", middleware.AuthMiddleware(firebaseAuth), authHandler.Me)
 
 	// 3. Admin-only routes (ต้องมี role = "admin")
 	adminGroup := router.Group("/admin", middleware.AuthMiddleware(firebaseAuth), middleware.RequireRole(firestoreClient, "admin"))

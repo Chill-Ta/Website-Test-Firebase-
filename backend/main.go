@@ -2,11 +2,17 @@ package main
 
 import (
 	"context"
+	"errors"
 	"log"
 	"os"
 	"time"
 
+	faqModule "login-firebase/internal/modules/FAQ"
+	faqRest "login-firebase/internal/modules/FAQ/interface/rest"
+	contactModule "login-firebase/internal/modules/contact"
+	contactRest "login-firebase/internal/modules/contact/interface/rest"
 	"login-firebase/internal/modules/user"
+	"login-firebase/internal/platform/apperr"
 
 	firebase "firebase.google.com/go/v4"
 	"github.com/gofiber/fiber/v3"
@@ -40,8 +46,33 @@ func main() {
 	}
 	defer firestoreClient.Close()
 
-	// 4. Fiber App
-	app := fiber.New()
+	// 4. Fiber App with custom error handling
+	app := fiber.New(fiber.Config{
+		ErrorHandler: func(c fiber.Ctx, err error) error {
+			code := fiber.StatusInternalServerError
+			var e *fiber.Error
+			if errors.As(err, &e) {
+				code = e.Code
+			}
+
+			var appErr *apperr.AppError
+			if errors.As(err, &appErr) {
+				if appErr.Type == "validation" {
+					code = fiber.StatusBadRequest
+				}
+				return c.Status(code).JSON(fiber.Map{
+					"success": false,
+					"error":   appErr.Message,
+					"detail":  appErr.Detail,
+				})
+			}
+
+			return c.Status(code).JSON(fiber.Map{
+				"success": false,
+				"error":   err.Error(),
+			})
+		},
+	})
 
 	// 4.1 CORS — อนุญาต Frontend (Next.js) เข้าถึง API
 	app.Use(cors.New(cors.Config{
@@ -58,6 +89,14 @@ func main() {
 
 	// 5. Register User module routes
 	user.Register(app, firestoreClient, firebaseAuth)
+
+	// 5.1 Register FAQ module routes
+	faqMod := faqModule.New(firestoreClient)
+	faqRest.RegisterRoutes(app, faqMod.Handler)
+
+	// 5.2 Register Contact module routes
+	contactMod := contactModule.New(firestoreClient)
+	contactRest.RegisterRoutes(app, contactMod.Handler, firebaseAuth, firestoreClient)
 
 	// 6. Start Server
 	port := os.Getenv("PORT")
