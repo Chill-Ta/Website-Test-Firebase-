@@ -1,6 +1,7 @@
 import { auth } from "@/lib/firebase";
 import { FirebaseAuthRepository } from "@/data/repositories/firebase-auth.repository";
 import { FirebaseHelpRepository } from "@/data/repositories/firebase-help.repository";
+import { FirebaseReviewRepository } from "@/data/repositories/firebase-review.repository";
 import { LoginUseCase } from "@/domain/use-cases/login.use-case";
 import { RegisterUseCase } from "@/domain/use-cases/register.use-case";
 import { LogoutUseCase } from "@/domain/use-cases/logout.use-case";
@@ -11,9 +12,13 @@ import { FetchFaqsUseCase } from "@/domain/use-cases/fetch-faqs.use-case";
 import { SubmitContactUseCase } from "@/domain/use-cases/submit-contact.use-case";
 import { FetchContactsUseCase } from "@/domain/use-cases/fetch-contacts.use-case";
 import { ReplyContactUseCase } from "@/domain/use-cases/reply-contact.use-case";
+import { FetchReviewsUseCase } from "@/domain/use-cases/fetch-reviews.use-case";
+import { ApproveReviewUseCase } from "@/domain/use-cases/approve-review.use-case";
+import { DeleteReviewUseCase } from "@/domain/use-cases/delete-review.use-case";
 
 export const authRepository = new FirebaseAuthRepository(auth);
 const helpRepository = new FirebaseHelpRepository();
+export const reviewRepository = new FirebaseReviewRepository();
 
 export const loginUseCase = new LoginUseCase(authRepository);
 export const registerUseCase = new RegisterUseCase(authRepository);
@@ -25,3 +30,6 @@ export const fetchFaqsUseCase = new FetchFaqsUseCase(helpRepository);
 export const submitContactUseCase = new SubmitContactUseCase(helpRepository);
 export const fetchContactsUseCase = new FetchContactsUseCase(helpRepository);
 export const replyContactUseCase = new ReplyContactUseCase(helpRepository);
+export const fetchReviewsUseCase = new FetchReviewsUseCase(reviewRepository);
+export const approveReviewUseCase = new ApproveReviewUseCase(reviewRepository);
+export const deleteReviewUseCase = new DeleteReviewUseCase(reviewRepository);

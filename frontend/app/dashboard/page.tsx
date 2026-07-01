@@ -222,6 +222,18 @@ function DashboardContent() {
                 </div>
               </Link>
 
+              {/* อนุมัติรีวิว */}
+              <Link href="/dashboard/approval" className="flex flex-row justify-center items-center p-0 gap-[16px] w-full h-[34px] bg-[#FCEFF4] hover:bg-[#F5CDDC]/50 transition-all">
+                <div className="flex flex-row items-center p-0 gap-[16px] w-[168px] h-[24px]">
+                  {/* check icon */}
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#545455" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                    <polyline points="22 4 12 14.01 9 11.01" />
+                  </svg>
+                  <span className="text-[18px] font-bold text-[#545455]" style={fontChula}>อนุมัติรีวิว</span>
+                </div>
+              </Link>
+
               {/* Component 37: Settings (Profile) */}
               <Link href="/profile" className="flex flex-row justify-center items-center p-0 gap-[16px] w-full h-[34px] bg-[#FCEFF4] hover:bg-[#F5CDDC]/50 transition-all">
                 <div className="flex flex-row items-center p-0 gap-[16px] w-[168px] h-[24px]">

@@ -11,6 +11,8 @@ import (
 	faqRest "login-firebase/internal/modules/FAQ/interface/rest"
 	contactModule "login-firebase/internal/modules/contact"
 	contactRest "login-firebase/internal/modules/contact/interface/rest"
+	reviewModule "login-firebase/internal/modules/review"
+	reviewRest "login-firebase/internal/modules/review/interface/rest"
 	"login-firebase/internal/modules/user"
 	"login-firebase/internal/platform/apperr"
 
@@ -97,6 +99,10 @@ func main() {
 	// 5.2 Register Contact module routes
 	contactMod := contactModule.New(firestoreClient)
 	contactRest.RegisterRoutes(app, contactMod.Handler, firebaseAuth, firestoreClient)
+
+	// 5.3 Register Review module routes
+	reviewMod := reviewModule.New(firestoreClient)
+	reviewRest.RegisterRoutes(app, reviewMod.Handler, firebaseAuth, firestoreClient)
 
 	// 6. Start Server
 	port := os.Getenv("PORT")
