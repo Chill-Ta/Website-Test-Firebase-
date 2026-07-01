@@ -1,8 +1,15 @@
 @import "tailwindcss";
 
+@font-face {
+  font-family: 'ChulaCharasNew';
+  src: local('ChulaCharasNew');
+  font-weight: normal;
+  font-style: normal;
+}
+
 :root {
-  --font-family: 'Outfit', 'Noto Sans Thai', sans-serif;
-  color-scheme: dark;
+  --font-family: 'ChulaCharasNew', 'Outfit', 'Noto Sans Thai', sans-serif;
+  color-scheme: light dark;
 }
 
 body {

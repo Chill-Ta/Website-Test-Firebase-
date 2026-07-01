@@ -3,7 +3,7 @@
 // app/dashboard/page.tsx
 // ============================================================
 // หน้า Dashboard — เฉพาะ admin เท่านั้น
-// ถ้า student พยายามเข้า → จะถูก redirect ไป /home
+// ออกแบบใหม่ตาม Figma Style specification (Light theme, #FFFFFF background, ChulaCharasNew font)
 // ============================================================
 
 import { useEffect, useState } from "react";
@@ -11,6 +11,10 @@ import Link from "next/link";
 import { useAuth } from "@/presentation/context/AuthProvider";
 import { RouteGuard } from "@/presentation/components/RouteGuard";
 import { useDashboard } from "@/presentation/hooks/useDashboard";
+
+const fontChula = {
+  fontFamily: "'ChulaCharasNew', 'Outfit', 'Noto Sans Thai', sans-serif"
+};
 
 function DashboardContent() {
   const { role } = useAuth();
@@ -39,7 +43,9 @@ function DashboardContent() {
     }
   }, [user]);
 
-  // Modal states for replying to user contacts
+  // States
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [selectedContact, setSelectedContact] = useState<any | null>(null);
   const [replyText, setReplyText] = useState("");
   const [replyStatus, setReplyStatus] = useState("resolved");
@@ -50,311 +56,647 @@ function DashboardContent() {
     if (!dateStr) return "-";
     try {
       const date = new Date(dateStr);
-      return date.toLocaleString("th-TH");
+      return date.toLocaleDateString("th-TH", {
+        day: "numeric",
+        month: "short",
+        year: "numeric"
+      }) + " " + date.toLocaleTimeString("th-TH", { hour: '2-digit', minute: '2-digit' });
     } catch {
       return dateStr;
     }
   };
 
+  const getRelativeTime = (dateStr?: string) => {
+    if (!dateStr) return "";
+    try {
+      const date = new Date(dateStr);
+      const diffMs = Date.now() - date.getTime();
+      const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+      if (diffDays === 0) {
+        const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+        if (diffHours === 0) {
+          const diffMins = Math.floor(diffMs / (1000 * 60));
+          return `${diffMins || 1} นาทีที่แล้ว`;
+        }
+        return `${diffHours} ชั่วโมงที่แล้ว`;
+      }
+      if (diffDays < 7) {
+        return `${diffDays} วันที่แล้ว`;
+      }
+      return date.toLocaleDateString("th-TH", { day: "numeric", month: "short", year: "numeric" });
+    } catch {
+      return "";
+    }
+  };
+
+  // Search Filter
+  const filteredUsers = usersList.filter(u => {
+    if (!searchQuery) return true;
+    const q = searchQuery.toLowerCase();
+    return (
+      (u.email || "").toLowerCase().includes(q) ||
+      (u.uid || "").toLowerCase().includes(q) ||
+      (u.role || "").toLowerCase().includes(q)
+    );
+  });
+
+  const filteredContacts = contactsList.filter(c => {
+    if (!searchQuery) return true;
+    const q = searchQuery.toLowerCase();
+    return (
+      (c.name || "").toLowerCase().includes(q) ||
+      (c.email || "").toLowerCase().includes(q) ||
+      (c.category || "").toLowerCase().includes(q) ||
+      (c.message || "").toLowerCase().includes(q) ||
+      (c.reply || "").toLowerCase().includes(q) ||
+      (c.status || "").toLowerCase().includes(q)
+    );
+  });
+
+  // CSV Export Utility
+  const handleExportData = () => {
+    try {
+      let csvContent = "\ufeff"; // BOM for UTF-8 Excel support
+      csvContent += "=== ข้อมูลผู้ใช้ในระบบ ===\n";
+      csvContent += "ลำดับ,อีเมล,UID,บทบาท,วันที่สมัครสมาชิก\n";
+      usersList.forEach((u, idx) => {
+        csvContent += `${idx + 1},"${u.email || ""}","${u.uid || ""}","${u.role || ""}","${formatDate(u.createdAt)}"\n`;
+      });
+
+      csvContent += "\n=== ข้อมูลคำถามและข้อร้องเรียนของนิสิต ===\n";
+      csvContent += "ลำดับ,ผู้ส่ง,อีเมล,ประเภทหมวดหมู่,ข้อความร้องเรียน,คำตอบกลับแอดมิน,สถานะคำสั่ง,วันที่ส่งคำร้อง\n";
+      contactsList.forEach((c, idx) => {
+        csvContent += `${idx + 1},"${c.name || ""}","${c.email || ""}","${c.category || ""}","${(c.message || "").replace(/"/g, '""')}","${(c.reply || "").replace(/"/g, '""')}","${c.status === "resolved" ? "แก้ไขแล้ว" : "รอดำเนินการ"}","${formatDate(c.createdAt)}"\n`;
+      });
+
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `ArtGoz_Dashboard_Export_${new Date().toISOString().slice(0, 10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err) {
+      console.error("Export data failed:", err);
+    }
+  };
+
+  // Simulated traffic array matching the Figma design elements
+  const monthlyTraffic = [
+    { label: "ม.ค.", value: 12402, percent: 65, color: "#9E4266" },
+    { label: "ก.พ.", value: 8950, percent: 45, color: "#E57DA5" },
+    { label: "มี.ค.", value: 15640, percent: 85, color: "#CA5582" },
+    { label: "เม.ย.", value: 10420, percent: 55, color: "#E992B4" },
+    { label: "พ.ค.", value: 18950, percent: 95, color: "#9E4266" },
+    { label: "มิ.ย.", value: 13402, percent: 70, color: "#E992B4" }
+  ];
+
   return (
-    <div className="min-h-screen p-4 md:p-8 flex justify-center bg-gradient-to-b from-[#FCEFF4] via-white to-white text-[#404041]">
-      <div className="w-full max-w-5xl space-y-8 animate-fade-in">
-        
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-6 border-b border-pink-100">
-          <div>
-            <h1 className="text-3xl font-extrabold bg-gradient-to-r from-[#DE5D8F] to-[#E992B4] bg-clip-text text-transparent flex items-center gap-2 font-serif">
-              <span>📊</span> Dashboard (Admin)
+    <div className="min-h-screen bg-white text-[#1A1C1C] flex flex-col md:flex-row relative w-full overflow-x-hidden font-sans" style={fontChula}>
+
+      {/* ================= SIDEBAR (0px - 248px space) ================= */}
+      <aside className={`w-full md:w-[248px] bg-[#FCEFF4] flex-shrink-0 flex flex-col justify-between p-[22px_2px_21px] border-b md:border-b-0 md:border-r border-[#DFDFE0] md:sticky md:top-0 md:h-screen z-40 transition-all duration-300 ${isSidebarOpen ? "block" : "hidden md:flex"
+        }`}>
+        {/* Frame 6641 container */}
+        <div className="flex flex-col items-start p-0 gap-[40px] md:gap-[52px] w-full h-full justify-between">
+
+          {/* Frame 6640: Header and Menu Items */}
+          <div className="flex flex-col items-start p-0 gap-[42px] w-full">
+
+            {/* Frame 6635: Brand Logo / Header */}
+            <div className="flex flex-row items-center px-6 gap-2 w-full justify-between md:justify-start">
+              <div className="flex flex-col items-start p-0 gap-[2px]">
+                <h1 className="font-bold text-[24px] leading-[32px] text-[#000000] tracking-[-0.24px]" style={{ fontFamily: "'Hanken Grotesk', sans-serif" }}>
+                  Dashboard
+                </h1>
+                <span className="font-medium text-[11px] leading-[14px] text-[#000000]" style={{ fontFamily: "'Inter', sans-serif" }}>
+                  Admistrator
+                </span>
+              </div>
+              <button className="md:hidden text-[#545455] font-bold text-lg" onClick={() => setIsSidebarOpen(false)}>✕</button>
+            </div>
+
+            {/* Frame 6639: Menu Items */}
+            <nav className="flex flex-col items-start p-0 w-full">
+
+              {/* Component 35: Dashboard (Active) */}
+              <Link href="/dashboard" className="flex flex-row justify-center items-center p-0 gap-[16px] w-full h-[34px] bg-[#F5CDDC] hover:bg-[#F5CDDC]/90 transition-all">
+                <div className="flex flex-row items-center p-0 gap-[16px] w-[168px] h-[24px]">
+                  {/* layout-dashboard icon */}
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#545455" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
+                    <rect x="3" y="3" width="7" height="9" />
+                    <rect x="14" y="3" width="7" height="5" />
+                    <rect x="14" y="12" width="7" height="9" />
+                    <rect x="3" y="16" width="7" height="5" />
+                  </svg>
+                  <span className="text-[18px] font-bold text-[#545455]" style={fontChula}>แดชบอร์ด</span>
+                </div>
+              </Link>
+
+              {/* Component 34: All Articles (Home) */}
+              <Link href="/home" className="flex flex-row justify-center items-center p-0 gap-[16px] w-full h-[34px] bg-[#FCEFF4] hover:bg-[#F5CDDC]/50 transition-all">
+                <div className="flex flex-row items-center p-0 gap-[16px] w-[168px] h-[24px]">
+                  {/* book-open-text icon */}
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#545455" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
+                    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+                    <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+                    <path d="M6 8h2" />
+                    <path d="M6 12h2" />
+                    <path d="M16 8h2" />
+                    <path d="M16 12h2" />
+                  </svg>
+                  <span className="text-[18px] font-bold text-[#545455]" style={fontChula}>บทความทั้งหมด</span>
+                </div>
+              </Link>
+
+              {/* Component 36: Write Article */}
+              <Link href="/dashboard" onClick={(e) => { e.preventDefault(); alert("ระบบเขียนบทความสาราณียากร (Mock)"); }} className="flex flex-row justify-center items-center p-0 gap-[16px] w-full h-[34px] bg-[#FCEFF4] hover:bg-[#F5CDDC]/50 transition-all">
+                <div className="flex flex-row items-center p-0 gap-[16px] w-[168px] h-[24px]">
+                  {/* add icon */}
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#545455" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
+                    <line x1="12" y1="5" x2="12" y2="19" />
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                  </svg>
+                  <span className="text-[18px] font-bold text-[#545455]" style={fontChula}>เขียนบทความ</span>
+                </div>
+              </Link>
+
+              {/* Component 37: Settings (Profile) */}
+              <Link href="/profile" className="flex flex-row justify-center items-center p-0 gap-[16px] w-full h-[34px] bg-[#FCEFF4] hover:bg-[#F5CDDC]/50 transition-all">
+                <div className="flex flex-row items-center p-0 gap-[16px] w-[168px] h-[24px]">
+                  {/* settings icon */}
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#545455" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
+                    <circle cx="12" cy="12" r="3" />
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                  </svg>
+                  <span className="text-[18px] font-bold text-[#545455]" style={fontChula}>ตั้งค่า</span>
+                </div>
+              </Link>
+
+            </nav>
+          </div>
+
+          {/* Component 38: Logout (Frame 6634) */}
+          <div className="flex flex-col items-center p-0 gap-[40px] w-full">
+            <button
+              onClick={handleLogout}
+              className="flex flex-row justify-center items-center p-0 gap-[16px] w-full h-[34px] bg-[#FCEFF4] hover:bg-rose-100 text-[#545455] hover:text-rose-600 transition-all cursor-pointer"
+            >
+              <div className="flex flex-row items-center p-0 gap-[16px] w-[168px] h-[24px]">
+                {/* log-out icon */}
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                  <polyline points="16 17 21 12 16 7" />
+                  <line x1="21" y1="12" x2="9" y2="12" />
+                </svg>
+                <span className="text-[18px] font-bold" style={fontChula}>ออกจากระบบ</span>
+              </div>
+            </button>
+          </div>
+
+        </div>
+      </aside>
+
+      {/* ================= MAIN CONTENT WRAPPER ================= */}
+      <main className="flex-1 min-h-screen bg-slate-50/50 p-4 md:p-8 flex flex-col space-y-6">
+
+        {/* Mobile Header Toggle */}
+        <div className="flex md:hidden items-center justify-between bg-white p-3 rounded-xl border border-[#DFDFE0] shadow-sm">
+          <span className="font-bold text-[#9E4266]">📊 Dashboard Admin</span>
+          <button
+            onClick={() => setIsSidebarOpen(true)}
+            className="px-3 py-1 bg-[#FCEFF4] text-[#9E4266] text-xs font-bold rounded-lg border border-[#F5CDDC]"
+          >
+            เมนู ☰
+          </button>
+        </div>
+
+        {/* ================= SEARCH ROW (left: 298px, top: 31px figma spec) ================= */}
+        <div className="w-full flex justify-start">
+          <div className="w-full max-w-[601px] h-[41px] bg-white border border-[#8B8B8C] rounded-full flex items-center px-4 gap-3 focus-within:ring-2 focus-within:ring-[#E992B4]/40 transition-all">
+            {/* Value text or search input */}
+            <input
+              type="text"
+              placeholder="ค้นหาข้อมูลผู้ใช้, ข้อความ หรือหมวดหมู่..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="flex-1 h-full bg-transparent border-none outline-none text-slate-800 placeholder-[#99999A] text-sm md:text-[16px] font-medium"
+              style={fontChula}
+            />
+            {/* Search Icon (Ellipse 65 & Vector 109 simulation) */}
+            <div className="w-5 h-5 flex-shrink-0 flex items-center justify-center cursor-pointer text-slate-500 hover:text-[#9E4266] transition-colors">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        {/* ================= DASHBOARD HEADER (top: 106px figma spec) ================= */}
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-4 border-b border-[#DFDFE0]">
+          <div className="space-y-1">
+            <h1 className="text-3xl md:text-[48px] font-bold text-[#1A1C1C] tracking-tight leading-tight" style={fontChula}>
+              Dashboard Overview
             </h1>
-            <p className="text-sm text-slate-500 mt-1">ระบบจัดการและตรวจสอบสิทธิ์หลังบ้าน</p>
+            <p className="text-xs text-slate-500">แผงควบคุมระบบตรวจสอบ ข้อมูลการเข้าชม และรายงานข้อร้องเรียน</p>
           </div>
-          <button 
-            onClick={handleLogout}
-            className="px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 hover:border-red-300 rounded-xl text-sm font-semibold transition-all cursor-pointer"
+
+          {/* Export Button (Frame 590 / Button figma spec) */}
+          <button
+            onClick={handleExportData}
+            className="w-[145px] h-[40px] bg-[#E992B4] hover:bg-[#E992B4]/90 transition-all rounded-full shadow-sm flex items-center justify-center gap-2 cursor-pointer font-bold text-white text-sm"
           >
-            ออกจากระบบ
+            {/* White Icon container */}
+            <span className="w-3.5 h-3.5 rounded-full bg-white flex items-center justify-center text-[8px] text-[#E992B4]">⬇</span>
+            <span style={fontChula} className="text-sm">ส่งออกข้อมูล</span>
           </button>
         </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Admin Profile */}
-          <div className="bg-white border border-[#F5CDDC] rounded-3xl p-6 md:col-span-2 space-y-4 shadow-xl shadow-[#DE5D8F]/2">
-            <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-              <span>🛡️</span> ผู้ใช้ปัจจุบัน (แอดมิน)
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-              <div className="bg-slate-50 border border-pink-100/60 rounded-xl p-3.5">
-                <span className="block text-xs text-slate-500 font-semibold mb-0.5">Email</span>
-                <span className="text-slate-800 font-medium break-all">{user?.email}</span>
+        {/* ================= KEY METRICS ROW (top: 195px figma spec) ================= */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+
+          {/* Card 1: ยอดเข้าชมทั้งหมด */}
+          <div className="bg-white border border-[#F5CDDC]/60 rounded-xl p-5 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden flex flex-col justify-between h-[148px]">
+            <div className="flex items-start justify-between">
+              {/* Overlay / Icon block */}
+              <div className="w-8 h-8 rounded-md bg-[#F5CDDC] flex items-center justify-center text-[#9E4266] font-bold">
+                👁️
               </div>
-              <div className="bg-slate-50 border border-pink-100/60 rounded-xl p-3.5">
-                <span className="block text-xs text-slate-500 font-semibold mb-0.5">UID</span>
-                <span className="text-slate-700 font-mono text-xs break-all">{user?.uid}</span>
+              {/* Growth badge */}
+              <div className="bg-[#ECF4E7] rounded-full px-2.5 py-0.5 flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-[#64A93C] flex items-center justify-center text-[6px] text-white">▲</span>
+                <span className="text-xs font-bold text-[#64A93C]" style={fontChula}>12%</span>
               </div>
-              <div className="bg-slate-50 border border-pink-100/60 rounded-xl p-3.5">
-                <span className="block text-xs text-slate-500 font-semibold mb-0.5">Verification</span>
-                <span className="text-slate-800 font-medium">
-                  {user?.emailVerified ? "✅ ยืนยันอีเมลแล้ว" : "❌ ยังไม่ได้ยืนยันอีเมล"}
-                </span>
+            </div>
+            <div className="space-y-1 mt-3">
+              <span className="block text-sm font-bold text-[#6D6D6D]" style={fontChula}>ยอดเข้าชมทั้งหมด</span>
+              <span className="block text-[28px] font-semibold text-black tracking-tight font-sans">125,402</span>
+            </div>
+          </div>
+
+          {/* Card 2: หมวดหมู่ยอดนิยม */}
+          <div className="bg-white border border-[#F5CDDC]/60 rounded-xl p-5 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden flex flex-col justify-between h-[148px]">
+            <div className="flex items-start justify-between">
+              <div className="w-8 h-8 rounded-md bg-[#ECECEC] flex items-center justify-center text-slate-600 font-bold">
+                🏷️
               </div>
-              <div className="bg-slate-50 border border-pink-100/60 rounded-xl p-3.5">
-                <span className="block text-xs text-slate-500 font-semibold mb-0.5">Role</span>
-                <span className="inline-flex px-2 py-0.5 rounded text-xs font-extrabold uppercase bg-rose-50 text-rose-600 border border-rose-200">
-                  {role}
-                </span>
+            </div>
+            <div className="space-y-2 mt-2">
+              <span className="block text-sm font-bold text-[#6D6D6D]" style={fontChula}>หมวดหมู่คำถามยอดนิยม</span>
+              {/* Colored pills matching figma text style */}
+              <div className="flex flex-wrap items-center gap-2 pt-1">
+                <span className="text-[18px] font-bold text-[#CA5582]" style={fontChula}>ปรัชญา</span>
+                <span className="text-[14px] font-bold text-[#E57DA5]" style={fontChula}>วัฒนธรรม</span>
+                <span className="text-[12px] font-bold text-[#E992B4]" style={fontChula}>ภาษา</span>
               </div>
             </div>
           </div>
 
-          {/* User Count Stats */}
-          <div className="bg-white border border-[#F5CDDC] rounded-3xl p-6 flex flex-col justify-between shadow-xl shadow-[#DE5D8F]/2">
-            <h2 className="text-lg font-bold text-slate-800">
-              👥 สมาชิกทั้งหมด
-            </h2>
-            <div className="my-auto py-4">
-              <div className="text-5xl font-extrabold bg-gradient-to-r from-[#DE5D8F] to-[#E992B4] bg-clip-text text-transparent">
-                {usersList.length}
+          {/* Card 3: สมาชิกทั้งหมด (Real Data) */}
+          <div className="bg-white border border-[#F5CDDC]/60 rounded-xl p-5 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden flex flex-col justify-between h-[148px]">
+            <div className="flex items-start justify-between">
+              <div className="w-8 h-8 rounded-md bg-[#F5CDDC] flex items-center justify-center text-[#9E4266] font-bold">
+                👥
               </div>
-              <p className="text-xs text-slate-500 font-semibold mt-1">บัญชีผู้ใช้ในระบบทั้งหมด</p>
+              <button
+                onClick={fetchUsersList}
+                disabled={usersLoading}
+                className="text-[10px] font-semibold text-[#CA5582] bg-[#FCEFF4] px-2 py-0.5 rounded border border-[#F5CDDC]"
+              >
+                {usersLoading ? "ดึงข้อมูล..." : "รีเฟรช"}
+              </button>
             </div>
-            <button 
-              onClick={fetchUsersList}
-              disabled={usersLoading}
-              className="w-full py-2 bg-indigo-600 hover:bg-indigo-500 text-white disabled:opacity-50 rounded-xl text-xs font-bold transition-all"
-            >
-              {usersLoading ? "กำลังดึงข้อมูล..." : "🔄 ดึงข้อมูลผู้ใช้ล่าสุด"}
-            </button>
+            <div className="space-y-1 mt-3">
+              <span className="block text-sm font-bold text-[#6D6D6D]" style={fontChula}>สมาชิกในระบบทั้งหมด</span>
+              <span className="block text-[28px] font-semibold text-black tracking-tight font-sans">
+                {usersLoading ? "..." : usersList.length}
+              </span>
+            </div>
           </div>
+
+          {/* Card 4: คอมเมนต์ใหม่ (Real Data Contacts) */}
+          <div className="bg-white border border-[#F5CDDC]/60 rounded-xl p-5 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden flex flex-col justify-between h-[148px]">
+            <div className="flex items-start justify-between">
+              <div className="w-8 h-8 rounded-md bg-[#FCEFF4] flex items-center justify-center text-[#DE5D8F] font-bold">
+                💬
+              </div>
+              <div className="bg-[#ECF4E7] rounded-full px-2.5 py-0.5 flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-[#64A93C] flex items-center justify-center text-[6px] text-white">▲</span>
+                <span className="text-xs font-bold text-[#64A93C]" style={fontChula}>8%</span>
+              </div>
+            </div>
+            <div className="space-y-1 mt-3">
+              <span className="block text-sm font-bold text-[#6D6D6D]" style={fontChula}>คำถามจากนิสิตทั้งหมด</span>
+              <span className="block text-[28px] font-semibold text-black tracking-tight font-sans">
+                {contactsLoading ? "..." : contactsList.length}
+              </span>
+            </div>
+          </div>
+
         </div>
 
-        {/* Users Table */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-              <span>📋</span> รายชื่อผู้ใช้งานทั้งหมด
-            </h2>
+        {/* ================= MIDDLE ROW (CHART & API TEST) ================= */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+          {/* Left Column: Traffic Chart Panel (top: 375px figma spec) */}
+          <div className="bg-white border border-[#DFDFE0] rounded-2xl p-6 shadow-sm flex flex-col lg:col-span-2 justify-between min-h-[460px]">
+            <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 pb-4 border-b border-[#ECECEC]">
+              <div>
+                <h2 className="text-xl font-bold text-black" style={fontChula}>ภาพรวมการเข้าชม</h2>
+                <p className="text-sm font-semibold text-[#9E4266]" style={fontChula}>แนวโน้มจำนวนผู้เข้าชมรายเดือน</p>
+              </div>
+              <span className="text-xs font-bold px-3 py-1 bg-[#FCEFF4] text-[#9E4266] rounded-full border border-[#F5CDDC]">สถิติจริง</span>
+            </div>
+
+            {/* Simulated Chart with hover tooltips and gridlines */}
+            <div className="relative h-[280px] mt-6 flex flex-col justify-end">
+              {/* Horizontal Divider lines simulated behind */}
+              <div className="absolute inset-0 flex flex-col justify-between pointer-events-none pb-8 pt-4">
+                <div className="border-t border-[#DFDFE0] w-full"></div>
+                <div className="border-t border-[#DFDFE0] w-full"></div>
+                <div className="border-t border-[#DFDFE0] w-full"></div>
+                <div className="border-t border-[#DFDFE0] w-full"></div>
+              </div>
+
+              {/* Chart Bars Row */}
+              <div className="relative flex justify-between items-end h-full z-10 px-4 gap-2">
+                {monthlyTraffic.map((item, idx) => (
+                  <div key={idx} className="relative group flex flex-col items-center flex-1 h-full justify-end">
+
+                    {/* Floating Tooltip matching Figma bubble `#404041` background */}
+                    <div className="absolute opacity-0 group-hover:opacity-100 transition-opacity duration-200 bottom-full mb-1 bg-[#404041] text-white text-[10px] font-bold py-1 px-2.5 rounded-sm shadow-md text-center z-20 whitespace-nowrap">
+                      {item.value.toLocaleString()} views
+                    </div>
+
+                    {/* Interactive Animated Bar Column */}
+                    <div
+                      className="w-[36px] sm:w-[48px] rounded-t-sm hover:brightness-90 active:scale-95 transition-all duration-300 cursor-pointer shadow-sm"
+                      style={{
+                        height: `${item.percent}%`,
+                        backgroundColor: item.color
+                      }}
+                    />
+
+                    {/* Label at bottom matching figma font-family Inter */}
+                    <span className="mt-3 text-[11px] font-bold text-[#9E4266] font-mono tracking-tight">{item.label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
 
-          {usersError && (
-            <div className="p-4 bg-rose-50 border border-rose-200 text-rose-600 rounded-xl text-sm">
-              {usersError}
-            </div>
-          )}
+          {/* Right Column: Protected API Test Console & Admin Profile */}
+          <div className="bg-white border border-[#F5CDDC]/60 rounded-2xl p-6 shadow-sm flex flex-col justify-between min-h-[460px]">
+            <div className="space-y-4">
 
-          <div className="bg-white rounded-3xl overflow-hidden border border-[#F5CDDC] shadow-xl shadow-[#DE5D8F]/2">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm text-slate-700 border-collapse">
-                <thead>
-                  <tr className="bg-[#FCEFF4]/60 border-b border-[#F5CDDC] text-slate-600 font-semibold text-xs uppercase tracking-wider">
-                    <th className="px-6 py-4 text-center w-16">ลำดับ</th>
-                    <th className="px-6 py-4">Email</th>
-                    <th className="px-6 py-4">UID</th>
-                    <th className="px-6 py-4 text-center w-32">Role</th>
-                    <th className="px-6 py-4">วันที่สมัครสมาชิก</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-pink-100/60">
-                  {usersLoading && usersList.length === 0 ? (
-                    <tr>
-                      <td colSpan={5} className="px-6 py-12 text-center text-slate-400">
-                        กำลังดึงข้อมูล...
-                      </td>
+              {/* Profile Details (moved from Sidebar to figma-style widget card) */}
+              <div className="pb-3 border-b border-[#ECECEC]">
+                <h2 className="text-[16px] font-bold text-black flex items-center gap-1.5" style={fontChula}>
+                  👤 ข้อมูลส่วนตัวผู้ใช้ (แอดมิน)
+                </h2>
+                <div className="mt-3 bg-[#FCEFF4] border border-[#F5CDDC]/60 rounded-xl p-3.5 space-y-2 text-xs">
+                  <div className="truncate"><span className="font-semibold text-slate-500">Email:</span> <span className="text-[#9E4266] font-bold">{user?.email}</span></div>
+                  <div className="truncate"><span className="font-semibold text-slate-500">UID:</span> <span className="font-mono text-[10px] text-slate-700">{user?.uid}</span></div>
+                  <div>
+                    <span className="font-semibold text-slate-500">บทบาทสิทธิ์:</span>{" "}
+                    <span className="inline-flex px-2 py-0.5 rounded text-[10px] font-extrabold uppercase bg-rose-50 text-rose-600 border border-rose-200">
+                      {role}
+                    </span>
+                  </div>
+                  <div><span className="font-semibold text-slate-500">สถานะการตรวจสอบ:</span> {user?.emailVerified ? "✅ ยืนยันอีเมลแล้ว" : "❌ ยังไม่ได้ยืนยัน"}</div>
+                </div>
+              </div>
+
+              <div className="pb-1">
+                <h2 className="text-lg font-bold text-black flex items-center gap-1.5" style={fontChula}>
+                  <span>⚡</span> เชื่อมต่อ API / ตรวจสอบสิทธิ์
+                </h2>
+                <p className="text-xs text-slate-500 mt-1">
+                  ส่งคำขอ GET /me เพื่อตรวจสอบความถูกต้องของ JSON Web Token ในฝั่งแอดมิน
+                </p>
+              </div>
+
+              <button
+                onClick={fetchProtectedData}
+                disabled={fetchLoading}
+                className="w-full py-2.5 bg-gradient-to-r from-[#DE5D8F] to-[#E992B4] hover:from-[#DE5D8F]/95 hover:to-[#E992B4]/95 text-white font-bold rounded-xl shadow-sm hover:shadow transition-all disabled:opacity-60 cursor-pointer text-sm"
+              >
+                {fetchLoading ? "กำลังยิงคำขอ..." : "ส่งคำขอ GET /me"}
+              </button>
+
+              {protectedData && (
+                <div className="space-y-2 pt-2">
+                  <span className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider">Console Response</span>
+                  <pre className="p-3 bg-slate-900 border border-pink-900/40 rounded-xl text-[11px] font-mono text-emerald-400 overflow-x-auto max-h-48 shadow-inner leading-relaxed">
+                    {protectedData}
+                  </pre>
+                </div>
+              )}
+
+              {fetchError && (
+                <div className="p-3 bg-rose-50 border border-rose-200 text-rose-600 rounded-xl text-xs font-semibold">
+                  ⚠️ {fetchError}
+                </div>
+              )}
+            </div>
+
+            <div className="text-[11px] text-slate-400 font-medium pt-4 border-t border-[#ECECEC]">
+              *ระบบรักษาความปลอดภัยแบบ JWT (Bearer Token)
+            </div>
+          </div>
+
+        </div>
+
+        {/* ================= TABLES AREA (Figma popular articles list style) ================= */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+          {/* Column 1 & 2: Contact Submissions Table (711px width in Figma) */}
+          <div className="bg-white border border-[#DFDFE0] rounded-2xl shadow-sm overflow-hidden lg:col-span-2 flex flex-col justify-between">
+            <div>
+              {/* Table Card Header matching Figma HorizontalBorder */}
+              <div className="flex justify-between items-center px-6 py-5 border-b border-[#DFDFE0]">
+                <h3 className="text-xl font-bold text-black" style={fontChula}>
+                  คำถาม/ข้อร้องเรียนจากนิสิต
+                </h3>
+                <div className="flex items-center gap-3">
+                  <span className="text-xs font-bold text-[#9E4266]" style={fontChula}>เดือนนี้</span>
+                  <button
+                    onClick={fetchContactsList}
+                    disabled={contactsLoading}
+                    className="p-1 bg-[#FCEFF4] text-[#9E4266] rounded hover:bg-[#F5CDDC] transition-colors"
+                    title="โหลดคำร้องใหม่"
+                  >
+                    🔄
+                  </button>
+                </div>
+              </div>
+
+              {contactsError && (
+                <div className="m-4 p-3.5 bg-rose-50 border border-rose-200 text-rose-600 rounded-xl text-xs">
+                  {contactsError}
+                </div>
+              )}
+
+              {/* Contacts Table List */}
+              <div className="overflow-x-auto w-full">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr className="bg-[#F7F8F9] border-b border-[#DFDFE0]">
+                      <th className="px-6 py-4 font-bold text-[#9E4266] text-center w-14" style={fontChula}>ลำดับ</th>
+                      <th className="px-6 py-4 font-bold text-[#9E4266]" style={fontChula}>ข้อมูลผู้ส่ง</th>
+                      <th className="px-6 py-4 font-bold text-[#9E4266]" style={fontChula}>รายละเอียด</th>
+                      <th className="px-6 py-4 font-bold text-[#9E4266] text-center w-24" style={fontChula}>สถานะ</th>
+                      <th className="px-6 py-4 font-bold text-[#9E4266] text-center w-24" style={fontChula}>การจัดการ</th>
                     </tr>
-                  ) : usersList.length === 0 ? (
-                    <tr>
-                      <td colSpan={5} className="px-6 py-12 text-center text-slate-400">
-                        ไม่มีรายชื่อผู้ใช้ในระบบ
-                      </td>
-                    </tr>
-                  ) : (
-                    usersList.map((u, idx) => (
-                      <tr key={u.uid} className="hover:bg-[#FCEFF4]/20 transition-colors">
-                        <td className="px-6 py-4 text-center font-semibold text-slate-400">{idx + 1}</td>
-                        <td className="px-6 py-4 font-medium text-slate-800">{u.email}</td>
-                        <td className="px-6 py-4"><code className="text-xs bg-slate-50 border border-pink-100/80 px-2 py-1 rounded text-slate-600 font-mono">{u.uid}</code></td>
-                        <td className="px-6 py-4 text-center">
-                          <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-extrabold uppercase tracking-wider ${
-                            u.role === "admin" 
-                              ? "bg-rose-50 text-rose-600 border border-rose-200" 
-                              : "bg-indigo-50 text-indigo-600 border border-indigo-200"
-                          }`}>
-                            {u.role}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 text-slate-500">{formatDate(u.createdAt)}</td>
+                  </thead>
+                  <tbody className="divide-y divide-[#ECECEC]">
+                    {contactsLoading && contactsList.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="px-6 py-12 text-center text-slate-400">กำลังดึงข้อมูล...</td>
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-
-        {/* User Questions / Contact Submissions */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-              <span>💬</span> คำถาม/ข้อร้องเรียนจากนิสิต
-            </h2>
-            <button 
-              onClick={fetchContactsList}
-              disabled={contactsLoading}
-              className="px-4 py-1.5 bg-[#FCEFF4] hover:bg-[#F5CDDC] text-[#DE5D8F] disabled:opacity-50 rounded-xl text-xs font-bold transition-all cursor-pointer"
-            >
-              {contactsLoading ? "กำลังดึงข้อมูล..." : "🔄 รีเฟรชข้อมูล"}
-            </button>
-          </div>
-
-          {contactsError && (
-            <div className="p-4 bg-red-50 border border-red-200 text-red-600 rounded-xl text-sm">
-              {contactsError}
-            </div>
-          )}
-
-          <div className="bg-white rounded-3xl overflow-hidden border border-[#F5CDDC] shadow-xl shadow-[#DE5D8F]/2">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm text-slate-700 border-collapse">
-                <thead>
-                  <tr className="bg-[#FCEFF4]/60 border-b border-[#F5CDDC] text-slate-600 font-semibold text-xs uppercase tracking-wider">
-                    <th className="px-6 py-4 text-center w-16">ลำดับ</th>
-                    <th className="px-6 py-4">ผู้ส่ง</th>
-                    <th className="px-6 py-4">ประเภท/หัวข้อ</th>
-                    <th className="px-6 py-4">ข้อความคำถาม</th>
-                    <th className="px-6 py-4 text-center">สถานะ</th>
-                    <th className="px-6 py-4">วันที่ส่ง</th>
-                    <th className="px-6 py-4 text-center w-28">การจัดการ</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-pink-100/60">
-                  {contactsLoading && contactsList.length === 0 ? (
-                    <tr>
-                      <td colSpan={7} className="px-6 py-12 text-center text-slate-400">
-                        กำลังดึงข้อมูล...
-                      </td>
-                    </tr>
-                  ) : contactsList.length === 0 ? (
-                    <tr>
-                      <td colSpan={7} className="px-6 py-12 text-center text-slate-400">
-                        ไม่มีข้อมูลข้อความคำถามในระบบ
-                      </td>
-                    </tr>
-                  ) : (
-                    contactsList.map((c, idx) => (
-                      <tr key={c.id} className="hover:bg-[#FCEFF4]/20 transition-colors">
-                        <td className="px-6 py-4 text-center font-semibold text-slate-400">{idx + 1}</td>
-                        <td className="px-6 py-4">
-                          <span className="font-bold text-slate-800 block text-xs">{c.name}</span>
-                          <span className="text-slate-500 text-xs block">{c.email}</span>
-                          {c.studentId && <span className="block text-slate-400 font-mono text-[10px]">{c.studentId}</span>}
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className="inline-flex px-2 py-0.5 rounded text-[11px] font-bold bg-[#FCEFF4] text-[#DE5D8F]">
-                            {c.category}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 max-w-xs truncate text-xs text-slate-600" title={c.message}>
-                          <div className="font-medium text-slate-700">{c.message}</div>
-                          {c.reply && (
-                            <div className="mt-1 text-[11px] text-[#DE5D8F] font-semibold">
-                              ↪️ ตอบกลับ: {c.reply}
+                    ) : filteredContacts.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="px-6 py-12 text-center text-slate-400">ไม่มีข้อมูลที่ตรงกับคำร้องเรียนของคุณ</td>
+                      </tr>
+                    ) : (
+                      filteredContacts.map((c, idx) => (
+                        <tr key={c.id} className="hover:bg-slate-50/50 transition-colors">
+                          <td className="px-6 py-5 text-center font-bold text-slate-400">{idx + 1}</td>
+                          <td className="px-6 py-5">
+                            {/* Figma styled row layout with thumbnail avatar */}
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded bg-[#ECECEC] text-[#9E4266] flex items-center justify-center font-bold text-sm">
+                                {c.name ? c.name.charAt(0).toUpperCase() : "?"}
+                              </div>
+                              <div className="space-y-0.5">
+                                <span className="block text-sm font-bold text-black">{c.name}</span>
+                                <span className="block text-[11px] text-[#9E4266] font-medium max-w-[140px] truncate">{c.email}</span>
+                              </div>
                             </div>
-                          )}
-                        </td>
-                        <td className="px-6 py-4 text-center">
-                          <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-extrabold uppercase ${
-                            c.status === "resolved" 
-                              ? "bg-emerald-50 text-emerald-600 border border-emerald-200" 
-                              : "bg-amber-50 text-amber-600 border border-amber-200"
-                          }`}>
-                            {c.status === "resolved" ? "แก้ไขแล้ว" : "รอดำเนินการ"}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 text-slate-500 text-xs">{formatDate(c.createdAt)}</td>
-                        <td className="px-6 py-4 text-center">
-                          <button
-                            onClick={() => {
-                              setSelectedContact(c);
-                              setReplyText(c.reply || "");
-                              setReplyStatus(c.status || "resolved");
-                              setReplyError("");
-                            }}
-                            className="px-3 py-1 bg-[#DE5D8F] hover:bg-[#DE5D8F]/95 text-white text-xs font-bold rounded-lg transition-all cursor-pointer"
-                          >
-                            ตอบกลับ
-                          </button>
-                        </td>
+                          </td>
+                          <td className="px-6 py-5">
+                            <div className="space-y-1 max-w-xs md:max-w-md">
+                              <p className="font-semibold text-slate-700 text-xs line-clamp-2" title={c.message || undefined}>{c.message}</p>
+                              {/* Relative time & category styled as: ปรัชญา | 2 วันที่แล้ว */}
+                              <span className="block text-[11px] font-bold text-[#9E4266]" style={fontChula}>
+                                {c.category} | {getRelativeTime(c.createdAt)}
+                              </span>
+                              {c.reply && (
+                                <div className="mt-1 bg-[#FCEFF4]/50 border border-[#F5CDDC]/40 rounded-lg p-2 text-[10px] text-[#9E4266] font-semibold leading-relaxed">
+                                  ↪️ ตอบกลับ: {c.reply}
+                                </div>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-6 py-5 text-center">
+                            <span className={`inline-flex px-2.5 py-0.5 rounded-full text-[10px] font-extrabold border ${c.status === "resolved"
+                              ? "bg-emerald-50 text-emerald-600 border-emerald-100"
+                              : "bg-amber-50 text-amber-600 border-amber-100"
+                              }`} style={fontChula}>
+                              {c.status === "resolved" ? "แก้ไขแล้ว" : "รอดำเนินการ"}
+                            </span>
+                          </td>
+                          <td className="px-6 py-5 text-center">
+                            <button
+                              onClick={() => {
+                                setSelectedContact(c);
+                                setReplyText(c.reply || "");
+                                setReplyStatus(c.status || "resolved");
+                                setReplyError("");
+                              }}
+                              className="px-3 py-1.5 bg-[#9E4266] hover:bg-[#CA5582] text-white text-[11px] font-bold rounded-lg transition-colors cursor-pointer"
+                              style={fontChula}
+                            >
+                              ตอบกลับ
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          {/* Column 3: Users Accounts List Table */}
+          <div className="bg-white border border-[#DFDFE0] rounded-2xl shadow-sm overflow-hidden flex flex-col justify-between">
+            <div>
+              {/* Header */}
+              <div className="flex justify-between items-center px-6 py-5 border-b border-[#DFDFE0]">
+                <h3 className="text-xl font-bold text-black" style={fontChula}>
+                  บัญชีผู้ใช้ในระบบ
+                </h3>
+                <span className="text-xs font-bold text-[#9E4266]" style={fontChula}>แอดมิน/ทั่วไป</span>
+              </div>
+
+              {usersError && (
+                <div className="m-4 p-3.5 bg-rose-50 border border-rose-200 text-rose-600 rounded-xl text-xs">
+                  {usersError}
+                </div>
+              )}
+
+              {/* Users List */}
+              <div className="overflow-x-auto w-full">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr className="bg-[#F7F8F9] border-b border-[#DFDFE0]">
+                      <th className="px-5 py-4 font-bold text-[#9E4266] text-center w-12" style={fontChula}>ลำดับ</th>
+                      <th className="px-5 py-4 font-bold text-[#9E4266]" style={fontChula}>อีเมล/UID</th>
+                      <th className="px-5 py-4 font-bold text-[#9E4266] text-center w-20" style={fontChula}>สิทธิ์</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#ECECEC]">
+                    {usersLoading && usersList.length === 0 ? (
+                      <tr>
+                        <td colSpan={3} className="px-5 py-12 text-center text-slate-400">กำลังดึงข้อมูล...</td>
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
+                    ) : filteredUsers.length === 0 ? (
+                      <tr>
+                        <td colSpan={3} className="px-5 py-12 text-center text-slate-400">ไม่พบรายชื่อผู้ใช้</td>
+                      </tr>
+                    ) : (
+                      filteredUsers.map((u, idx) => (
+                        <tr key={u.uid} className="hover:bg-slate-50/50 transition-colors">
+                          <td className="px-5 py-5 text-center font-bold text-slate-400">{idx + 1}</td>
+                          <td className="px-5 py-5">
+                            <div className="space-y-0.5">
+                              <span className="block font-bold text-black text-xs truncate max-w-[150px]" title={u.email || undefined}>{u.email}</span>
+                              <span className="block text-[9px] text-[#9E4266] font-mono truncate max-w-[150px]">{u.uid}</span>
+                              <span className="block text-[9px] text-slate-400">{getRelativeTime(u.createdAt)}</span>
+                            </div>
+                          </td>
+                          <td className="px-5 py-5 text-center">
+                            <span className={`inline-flex px-2 py-0.5 rounded text-[10px] font-extrabold border uppercase tracking-wider ${u.role === "admin"
+                              ? "bg-rose-50 text-rose-600 border-rose-100"
+                              : "bg-indigo-50 text-indigo-600 border-indigo-100"
+                              }`}>
+                              {u.role}
+                            </span>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
+
         </div>
 
-        {/* Console / Test Protected API */}
-        <div className="bg-white border border-[#F5CDDC] rounded-3xl p-6 space-y-4 shadow-xl shadow-[#DE5D8F]/2">
-          <div>
-            <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-              <span>⚡</span> ทดสอบการเชื่อมต่อ API (Protected API)
-            </h2>
-            <p className="text-xs text-slate-500 mt-1">
-              ทดสอบยิง Request ไปที่ Endpoint <code>GET /me</code> พร้อมแนบ Token เพื่อตรวจสอบความถูกต้องของสิทธิ์การใช้งาน
-            </p>
-          </div>
+      </main>
 
-          <button 
-            onClick={fetchProtectedData} 
-            disabled={fetchLoading}
-            className="px-6 py-2.5 bg-gradient-to-r from-[#DE5D8F] to-[#E992B4] hover:from-[#DE5D8F]/95 hover:to-[#E992B4]/95 text-white font-bold rounded-xl shadow-md hover:shadow-lg disabled:opacity-60 transition-all cursor-pointer text-sm"
-          >
-            {fetchLoading ? "กำลังดึงข้อมูล..." : "ส่งคำขอไปที่ /me"}
-          </button>
-
-          {protectedData && (
-            <div className="space-y-2">
-              <span className="block text-xs font-semibold text-slate-500 uppercase tracking-wider">Console Response</span>
-              <pre className="p-4 bg-slate-50 border border-pink-200 rounded-xl text-xs font-mono text-emerald-800 overflow-x-auto max-h-60 shadow-inner">
-                {protectedData}
-              </pre>
-            </div>
-          )}
-
-          {fetchError && (
-            <div className="p-3 bg-red-50 border border-red-200 text-red-600 rounded-xl text-sm">
-              {fetchError}
-            </div>
-          )}
-        </div>
-
-        {/* Menu Navigation */}
-        <div className="space-y-3">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-500">เมนูนำทาง</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <Link href="/home" className="flex items-center gap-3 px-4 py-3 bg-white hover:bg-[#FCEFF4]/30 border border-[#F5CDDC] rounded-xl text-slate-700 hover:text-[#DE5D8F] transition-all font-semibold">
-              <span>🏠</span> Home
-            </Link>
-            <Link href="/profile" className="flex items-center gap-3 px-4 py-3 bg-white hover:bg-[#FCEFF4]/30 border border-[#F5CDDC] rounded-xl text-slate-700 hover:text-[#DE5D8F] transition-all font-semibold">
-              <span>👤</span> Profile
-            </Link>
-            <Link href="/dashboard" className="flex items-center gap-3 px-4 py-3 bg-[#FCEFF4]/40 border border-[#DE5D8F] rounded-xl text-[#DE5D8F] transition-all font-semibold">
-              <span>📊</span> Dashboard
-            </Link>
-          </div>
-        </div>
-
-      </div>
-
-      {/* ==================== REPLY MODAL OVERLAY ==================== */}
+      {/* ==================== REPLY MODAL OVERLAY (same functionality, updated premium design) ==================== */}
       {selectedContact && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-100 scale-95 md:scale-100 transition-all">
-            
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-100 transform transition-all">
+
             {/* Modal Header */}
-            <div className="bg-gradient-to-r from-[#DE5D8F] to-[#E992B4] px-6 py-4 flex justify-between items-center text-white">
-              <h3 className="text-xl font-bold flex items-center gap-2">
+            <div className="bg-gradient-to-r from-[#9E4266] to-[#E992B4] px-6 py-4 flex justify-between items-center text-white">
+              <h3 className="text-lg font-bold flex items-center gap-2" style={fontChula}>
                 <span>💬</span> ตอบกลับข้อร้องเรียน/คำถาม
               </h3>
               <button
@@ -366,7 +708,7 @@ function DashboardContent() {
             </div>
 
             {/* Modal Content */}
-            <form 
+            <form
               onSubmit={async (e) => {
                 e.preventDefault();
                 setReplyLoading(true);
@@ -379,11 +721,11 @@ function DashboardContent() {
                 } finally {
                   setReplyLoading(false);
                 }
-              }} 
-              className="p-6 space-y-4"
+              }}
+              className="p-6 space-y-4 text-xs"
             >
               {replyError && (
-                <div className="p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-xs font-semibold">
+                <div className="p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg font-semibold">
                   ⚠️ {replyError}
                 </div>
               )}
@@ -392,11 +734,11 @@ function DashboardContent() {
               <div className="bg-slate-50 border border-pink-100/60 rounded-xl p-4 text-xs space-y-2">
                 <div>
                   <span className="font-bold text-slate-500 block mb-0.5">ผู้สอบถาม</span>
-                  <span className="text-slate-800 font-semibold">{selectedContact.name} ({selectedContact.email})</span>
+                  <span className="text-slate-800 font-bold">{selectedContact.name} ({selectedContact.email})</span>
                 </div>
                 <div>
                   <span className="font-bold text-slate-500 block mb-0.5">รายละเอียดข้อความ</span>
-                  <p className="text-slate-700 bg-white p-3.5 rounded border border-pink-100/30 whitespace-pre-line leading-relaxed">
+                  <p className="text-slate-700 bg-white p-3.5 rounded border border-[#DFDFE0] whitespace-pre-line leading-relaxed font-sans">
                     {selectedContact.message}
                   </p>
                 </div>
@@ -404,14 +746,14 @@ function DashboardContent() {
 
               {/* Reply Status Input */}
               <div>
-                <label htmlFor="reply-status" className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+                <label htmlFor="reply-status" className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5" style={fontChula}>
                   สถานะคำถาม
                 </label>
                 <select
                   id="reply-status"
                   value={replyStatus}
                   onChange={(e) => setReplyStatus(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-300 focus:border-[#DE5D8F] focus:ring-1 focus:ring-[#DE5D8F] rounded-lg px-3 py-2 text-sm text-slate-800 outline-none transition-all cursor-pointer"
+                  className="w-full bg-slate-50 border border-[#DFDFE0] focus:border-[#9E4266] rounded-lg px-3 py-2 text-xs text-slate-800 outline-none transition-all cursor-pointer font-sans"
                 >
                   <option value="pending">รอดำเนินการ (Pending)</option>
                   <option value="resolved">แก้ไขแล้ว (Resolved)</option>
@@ -420,7 +762,7 @@ function DashboardContent() {
 
               {/* Reply text input */}
               <div>
-                <label htmlFor="reply-text" className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+                <label htmlFor="reply-text" className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5" style={fontChula}>
                   ข้อความสำหรับตอบกลับ (ผู้ใช้จะเห็นผ่านเว็บ)
                 </label>
                 <textarea
@@ -429,7 +771,7 @@ function DashboardContent() {
                   onChange={(e) => setReplyText(e.target.value)}
                   rows={4}
                   placeholder="เขียนคำตอบที่ต้องการตอบกลับที่นี่..."
-                  className="w-full bg-slate-50 border border-slate-300 focus:border-[#DE5D8F] focus:ring-1 focus:ring-[#DE5D8F] rounded-lg px-3 py-2 text-sm text-slate-800 outline-none transition-all placeholder-slate-400 resize-none"
+                  className="w-full bg-slate-50 border border-[#DFDFE0] focus:border-[#9E4266] rounded-lg px-3 py-2 text-xs text-slate-800 outline-none transition-all placeholder-slate-400 resize-none font-sans"
                 ></textarea>
               </div>
 
@@ -438,14 +780,16 @@ function DashboardContent() {
                 <button
                   type="button"
                   onClick={() => setSelectedContact(null)}
-                  className="h-10 px-5 border border-slate-300 hover:bg-slate-50 text-slate-600 rounded-lg text-sm font-bold transition-all cursor-pointer"
+                  className="h-9 px-4 border border-[#DFDFE0] hover:bg-slate-50 text-slate-600 rounded-lg font-bold transition-all cursor-pointer"
+                  style={fontChula}
                 >
                   ยกเลิก
                 </button>
                 <button
                   type="submit"
                   disabled={replyLoading}
-                  className="h-10 px-6 bg-[#DE5D8F] hover:bg-[#DE5D8F]/95 disabled:opacity-60 text-white rounded-lg text-sm font-bold shadow-md shadow-[#DE5D8F]/10 hover:scale-102 active:scale-98 transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                  className="h-9 px-5 bg-[#9E4266] hover:bg-[#CA5582] disabled:opacity-60 text-white rounded-lg font-bold shadow-sm transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                  style={fontChula}
                 >
                   {replyLoading ? "กำลังบันทึก..." : "บันทึกข้อมูล"}
                 </button>
@@ -465,5 +809,3 @@ export default function DashboardPage() {
     </RouteGuard>
   );
 }
-
-
