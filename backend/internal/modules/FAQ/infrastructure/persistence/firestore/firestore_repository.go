@@ -2,6 +2,7 @@ package firestore
 
 import (
 	"context"
+	"slices"
 	"strings"
 	"time"
 
@@ -46,12 +47,6 @@ func (r *faqRepository) Create(ctx context.Context, f *domain.FAQ) error {
 func (r *faqRepository) List(ctx context.Context, tag string, queryStr string) ([]*domain.FAQ, error) {
 	col := r.client.Collection("faqs")
 	q := col.Where("is_active", "==", true)
-
-	if tag != "" {
-		q = q.Where("tags", "array-contains", tag)
-	}
-
-	q = q.OrderBy("sort_order", firestore.Asc)
 
 	iter := q.Documents(ctx)
 	defer iter.Stop()
@@ -103,6 +98,19 @@ func (r *faqRepository) List(ctx context.Context, tag string, queryStr string) (
 			f.UpdatedAt = ua
 		}
 
+		if tag != "" {
+			hasTag := false
+			for _, t := range f.Tags {
+				if t == tag {
+					hasTag = true
+					break
+				}
+			}
+			if !hasTag {
+				continue
+			}
+		}
+
 		if queryStr != "" {
 			qLower := strings.ToLower(queryStr)
 			matchQuestion := strings.Contains(strings.ToLower(f.Question), qLower)
@@ -114,6 +122,10 @@ func (r *faqRepository) List(ctx context.Context, tag string, queryStr string) (
 
 		items = append(items, &f)
 	}
+
+	slices.SortFunc(items, func(a, b *domain.FAQ) int {
+		return a.SortOrder - b.SortOrder
+	})
 
 	return items, nil
 }
