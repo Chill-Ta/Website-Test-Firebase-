@@ -58,10 +58,15 @@ func (u *registerUsecase) Register(req RegisterRequest) error {
 	}
 
 	// 2. บันทึกลง Firestore
+	role := req.Role
+	if role != "student" && role != "teacher" && role != "club-member" && role != "admin" {
+		role = "student"
+	}
+
 	user := &domain.User{
 		FirebaseUID: firebaseUser.UID,
 		Email:       req.Email,
-		Role:        "student",
+		Role:        role,
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
 	}

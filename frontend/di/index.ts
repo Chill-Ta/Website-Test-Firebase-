@@ -5,6 +5,7 @@ import { FirebaseReviewRepository } from "@/data/repositories/firebase-review.re
 import { LoginUseCase } from "@/domain/use-cases/login.use-case";
 import { RegisterUseCase } from "@/domain/use-cases/register.use-case";
 import { LogoutUseCase } from "@/domain/use-cases/logout.use-case";
+import { ChangePasswordUseCase } from "@/domain/use-cases/change-password.use-case";
 import { GetCurrentUserUseCase } from "@/domain/use-cases/get-current-user.use-case";
 import { FetchProfileUseCase } from "@/domain/use-cases/fetch-profile.use-case";
 import { FetchUsersUseCase } from "@/domain/use-cases/fetch-users.use-case";
@@ -23,6 +24,7 @@ export const reviewRepository = new FirebaseReviewRepository();
 export const loginUseCase = new LoginUseCase(authRepository);
 export const registerUseCase = new RegisterUseCase(authRepository);
 export const logoutUseCase = new LogoutUseCase(authRepository);
+export const changePasswordUseCase = new ChangePasswordUseCase(authRepository);
 export const getCurrentUserUseCase = new GetCurrentUserUseCase(authRepository);
 export const fetchProfileUseCase = new FetchProfileUseCase(authRepository);
 export const fetchUsersUseCase = new FetchUsersUseCase(authRepository);

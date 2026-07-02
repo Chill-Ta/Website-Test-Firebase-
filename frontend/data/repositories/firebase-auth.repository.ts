@@ -1,6 +1,15 @@
 import { AuthRepository } from "@/domain/repositories/auth.repository";
 import { User } from "@/domain/entities/user.entity";
-import { Auth, signInWithEmailAndPassword, signOut, onAuthStateChanged, User as FirebaseUser } from "firebase/auth";
+import { 
+  Auth, 
+  signInWithEmailAndPassword, 
+  signOut, 
+  onAuthStateChanged, 
+  User as FirebaseUser,
+  updatePassword,
+  EmailAuthProvider,
+  reauthenticateWithCredential
+} from "firebase/auth";
 
 export class FirebaseAuthRepository implements AuthRepository {
   private apiBase = "http://localhost:8080";
@@ -35,11 +44,11 @@ export class FirebaseAuthRepository implements AuthRepository {
     return { uid: data.uid, idToken, role: data.role };
   }
 
-  async register(email: string, password: string): Promise<{ message: string }> {
+  async register(email: string, password: string, role: string): Promise<{ message: string }> {
     const res = await fetch(`${this.apiBase}/register`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email, password, role }),
     });
 
     const data = await res.json();
@@ -109,5 +118,26 @@ export class FirebaseAuthRepository implements AuthRepository {
       updatedAt: item.updated_at || "",
       emailVerified: false,
     }));
+  }
+
+  async changePassword(oldPassword: string, newPassword: string): Promise<void> {
+    const user = this.auth.currentUser;
+    if (!user || !user.email) {
+      throw new Error("ไม่พบข้อมูลผู้ใช้ที่เข้าสู่ระบบ");
+    }
+
+    try {
+      const credential = EmailAuthProvider.credential(user.email, oldPassword);
+      await reauthenticateWithCredential(user, credential);
+      await updatePassword(user, newPassword);
+    } catch (err: any) {
+      if (err.code === "auth/wrong-password") {
+        throw new Error("รหัสผ่านเดิมไม่ถูกต้อง");
+      }
+      if (err.code === "auth/weak-password") {
+        throw new Error("รหัสผ่านใหม่ต้องมีอย่างน้อย 6 ตัวอักษร");
+      }
+      throw new Error(err.message || "ไม่สามารถเปลี่ยนรหัสผ่านได้");
+    }
   }
 }
