@@ -40,7 +40,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // เพื่อให้ RouteGuard รอจนกว่า backend จะยืนยัน role เสร็จ
         // แก้ race condition: onAuthStateChanged ยิงครั้งแรกด้วย null (loading=false)
         // แล้วยิงครั้งที่ 2 ด้วย user → ถ้าไม่ reset loading, RouteGuard จะเห็น
-        // loading=false + role=null แล้วเตะไป /login ก่อนที่จะดึง role เสร็จ
+        // loading=false + role=null แล้วเตะไป /home ก่อนที่จะดึง role เสร็จ
         setLoading(true);
 
         // ดึง role จาก backend (GET /me)

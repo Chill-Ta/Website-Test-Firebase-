@@ -2,7 +2,7 @@ import { ReviewRepository } from "@/domain/repositories/review.repository";
 import { Review } from "@/domain/entities/review.entity";
 
 export class FirebaseReviewRepository implements ReviewRepository {
-  private apiBase = "http://localhost:3000";
+  private apiBase = "http://localhost:8080";
 
   async fetchReviews(idToken: string): Promise<Review[]> {
     const res = await fetch(`${this.apiBase}/admin/reviews`, {

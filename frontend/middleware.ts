@@ -16,7 +16,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 // Routes ที่ไม่ต้อง login ก็เข้าได้
-const PUBLIC_ROUTES = ["/login", "/register", "/"];
+const PUBLIC_ROUTES = ["/register", "/"];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -34,5 +34,5 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   // ใช้ middleware กับ routes เหล่านี้
-  matcher: ["/home", "/profile", "/dashboard", "/login", "/register"],
+  matcher: ["/home", "/profile", "/dashboard", "/register"],
 };

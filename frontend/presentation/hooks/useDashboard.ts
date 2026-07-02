@@ -36,7 +36,7 @@ export function useDashboard() {
         setUser(currentUser);
         setLoading(false);
       } else {
-        router.push("/login");
+        router.push("/home");
       }
     });
 
@@ -46,7 +46,7 @@ export function useDashboard() {
   async function handleLogout() {
     try {
       await logoutUseCase.execute();
-      router.push("/login");
+      router.push("/home");
     } catch (err) {
       console.error("Logout error:", err);
     }

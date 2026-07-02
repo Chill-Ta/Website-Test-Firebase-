@@ -23,16 +23,16 @@ export function RouteGuard({ children, allowedRoles }: RouteGuardProps) {
   useEffect(() => {
     if (loading) return;
 
-    // ยังไม่ได้ login → ไปหน้า login
+    // ยังไม่ได้ login → ไปหน้าหลัก
     if (!user) {
-      router.push("/login");
+      router.push("/home");
       return;
     }
 
-    // role ยังเป็น null → ดึง role จาก backend ไม่สำเร็จ → ไปหน้า login
+    // role ยังเป็น null → ดึง role จาก backend ไม่สำเร็จ → ไปหน้าหลัก
     // ป้องกันไม่ให้เข้าถึง protected content โดยไม่ผ่านการยืนยัน role จาก backend
     if (!role) {
-      router.push("/login");
+      router.push("/home");
       return;
     }
 

@@ -77,7 +77,7 @@ export default function HelpPage() {
   async function handleLogout() {
     try {
       await logoutUseCase.execute();
-      router.push("/login");
+      router.push("/home");
     } catch (err) {
       console.error("Logout error:", err);
     }
@@ -283,7 +283,7 @@ export default function HelpPage() {
             </div>
           ) : (
             <Link
-              href="/login"
+              href="/home"
               className="w-[114px] h-[35px] bg-white border border-slate-200 hover:border-[#DE5D8F] text-[#404041] hover:text-[#DE5D8F] shadow-[0px_4px_4px_rgba(0,0,0,0.15)] rounded-lg text-[13.7px] font-bold flex items-center justify-center transition-all"
             >
               เข้าสู่ระบบ

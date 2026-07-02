@@ -3,7 +3,7 @@ import { User } from "@/domain/entities/user.entity";
 import { Auth, signInWithEmailAndPassword, signOut, onAuthStateChanged, User as FirebaseUser } from "firebase/auth";
 
 export class FirebaseAuthRepository implements AuthRepository {
-  private apiBase = "http://localhost:3000";
+  private apiBase = "http://localhost:8080";
 
   constructor(private auth: Auth) {}
 

@@ -20,6 +20,7 @@ import (
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/middleware/cors"
 	"github.com/gofiber/fiber/v3/middleware/limiter"
+	"github.com/gofiber/fiber/v3/middleware/logger"
 	"google.golang.org/api/option"
 )
 
@@ -62,6 +63,7 @@ func main() {
 				if appErr.Type == "validation" {
 					code = fiber.StatusBadRequest
 				}
+				log.Printf("[AppError] Type: %s, Message: %s, Detail: %s", appErr.Type, appErr.Message, appErr.Detail)
 				return c.Status(code).JSON(fiber.Map{
 					"success": false,
 					"error":   appErr.Message,
@@ -69,6 +71,7 @@ func main() {
 				})
 			}
 
+			log.Printf("[SystemError] Code: %d, Path: %s, Error: %v", code, c.Path(), err)
 			return c.Status(code).JSON(fiber.Map{
 				"success": false,
 				"error":   err.Error(),
@@ -76,9 +79,12 @@ func main() {
 		},
 	})
 
+	// 4.0 Request Logger middleware
+	app.Use(logger.New())
+
 	// 4.1 CORS — อนุญาต Frontend (Next.js) เข้าถึง API
 	app.Use(cors.New(cors.Config{
-		AllowOrigins: []string{"http://localhost:3001"},
+		AllowOrigins: []string{"http://localhost:3000"},
 		AllowHeaders: []string{"Content-Type", "Authorization"},
 		AllowMethods: []string{"GET", "POST", "PUT", "DELETE"},
 	}))
@@ -107,7 +113,7 @@ func main() {
 	// 6. Start Server
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "3000"
+		port = "8080"
 	}
 	log.Fatal(app.Listen(":" + port))
 }

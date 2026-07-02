@@ -24,9 +24,9 @@ export function useRegister() {
       setEmail("");
       setPassword("");
       
-      // Redirect ไปหน้า login หลังสมัครสมาชิกสำเร็จ (หน่วงเวลา 1.5 วินาทีเพื่อให้ผู้ใช้เห็นข้อความสำเร็จ)
+      // Redirect ไปหน้า home หลังสมัครสมาชิกสำเร็จ (หน่วงเวลา 1.5 วินาทีเพื่อให้ผู้ใช้เห็นข้อความสำเร็จ)
       setTimeout(() => {
-        router.push("/login");
+        router.push("/home");
       }, 1500);
     } catch (err: unknown) {
       setIsError(true);

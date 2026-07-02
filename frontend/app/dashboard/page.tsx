@@ -155,115 +155,108 @@ function DashboardContent() {
   return (
     <div className="min-h-screen bg-white text-[#1A1C1C] flex flex-col md:flex-row relative w-full overflow-x-hidden font-sans" style={fontChula}>
 
-      {/* ================= SIDEBAR (0px - 248px space) ================= */}
-      <aside className={`w-full md:w-[248px] bg-[#FCEFF4] flex-shrink-0 flex flex-col justify-between p-[22px_2px_21px] border-b md:border-b-0 md:border-r border-[#DFDFE0] md:sticky md:top-0 md:h-screen z-40 transition-all duration-300 ${isSidebarOpen ? "block" : "hidden md:flex"
-        }`}>
-        {/* Frame 6641 container */}
+      {/* ================= SIDEBAR (Component 41 / Default) ================= */}
+      <aside 
+        className={`w-full md:w-[246px] md:min-h-[1075px] bg-white flex-shrink-0 flex flex-col justify-between p-6 border-b md:border-b-0 md:border-r border-[#DFDFE0] md:sticky md:top-0 md:h-screen z-40 shadow-[0px_3px_7.7px_rgba(0,0,0,0.25)] transition-all duration-300 ${
+          isSidebarOpen ? "block" : "hidden md:flex"
+        }`}
+        style={{
+          maxWidth: "246px",
+        }}
+      >
         <div className="flex flex-col items-start p-0 gap-[40px] md:gap-[52px] w-full h-full justify-between">
-
-          {/* Frame 6640: Header and Menu Items */}
+          
           <div className="flex flex-col items-start p-0 gap-[42px] w-full">
-
-            {/* Frame 6635: Brand Logo / Header */}
-            <div className="flex flex-row items-center px-6 gap-2 w-full justify-between md:justify-start">
-              <div className="flex flex-col items-start p-0 gap-[2px]">
-                <h1 className="font-bold text-[24px] leading-[32px] text-[#000000] tracking-[-0.24px]" style={{ fontFamily: "'Hanken Grotesk', sans-serif" }}>
-                  Dashboard
-                </h1>
-                <span className="font-medium text-[11px] leading-[14px] text-[#000000]" style={{ fontFamily: "'Inter', sans-serif" }}>
-                  Admistrator
-                </span>
+            {/* Brand Logo Header */}
+            <div className="flex items-center gap-3 px-2 w-full justify-between md:justify-start">
+              <div className="flex items-center gap-2">
+                {/* Peacock SVG Logo */}
+                <svg width="45" height="45" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" className="flex-shrink-0 animate-pulse">
+                  <path d="M25 45C15 55 22 75 45 80C50 82 55 70 50 60C45 50 35 35 25 45Z" fill="#E992B4" opacity="0.7" />
+                  <path d="M35 35C20 45 28 65 50 72C55 74 58 62 53 52C48 42 50 25 35 35Z" fill="#CA5582" opacity="0.8" />
+                  <path d="M50 28C35 35 40 55 60 65C65 67 65 55 60 45C55 35 65 18 50 28Z" fill="#9E4266" opacity="0.9" />
+                  <path d="M70 28C85 35 80 55 60 65C55 67 55 55 60 45C65 35 55 18 70 28Z" fill="#E57DA5" opacity="0.7" />
+                  <path d="M85 35C100 45 92 65 70 72C65 74 62 62 67 52C72 42 70 25 85 35Z" fill="#FCEFF4" opacity="0.8" />
+                  <path d="M95 45C105 55 98 75 75 80C70 82 65 70 70 60C75 50 85 35 95 45Z" fill="#DFDFE0" opacity="0.8" />
+                  <path d="M60 95C55 85 52 70 56 55C58 48 55 42 50 39C46 36 53 28 60 32C64 34 68 40 66 50C64 60 68 75 60 95Z" fill="#545455" />
+                  <path d="M47 37L40 38L46 41Z" fill="#9CA3AF" />
+                </svg>
+                <div className="flex flex-col text-[14px] leading-tight text-slate-800 font-extrabold" style={fontChula}>
+                  <span>คณะกรรมการ</span>
+                  <span>นิสิตอักษรศาสตร์</span>
+                </div>
               </div>
               <button className="md:hidden text-[#545455] font-bold text-lg" onClick={() => setIsSidebarOpen(false)}>✕</button>
             </div>
 
-            {/* Frame 6639: Menu Items */}
-            <nav className="flex flex-col items-start p-0 w-full">
-
-              {/* Component 35: Dashboard (Active) */}
-              <Link href="/dashboard" className="flex flex-row justify-center items-center p-0 gap-[16px] w-full h-[34px] bg-[#F5CDDC] hover:bg-[#F5CDDC]/90 transition-all">
-                <div className="flex flex-row items-center p-0 gap-[16px] w-[168px] h-[24px]">
-                  {/* layout-dashboard icon */}
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#545455" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
-                    <rect x="3" y="3" width="7" height="9" />
-                    <rect x="14" y="3" width="7" height="5" />
-                    <rect x="14" y="12" width="7" height="9" />
-                    <rect x="3" y="16" width="7" height="5" />
-                  </svg>
-                  <span className="text-[18px] font-bold text-[#545455]" style={fontChula}>แดชบอร์ด</span>
-                </div>
+            {/* Navigation Links */}
+            <nav className="flex flex-col items-start p-0 w-full space-y-2">
+              {/* Dashboard Overview (Active) */}
+              <Link 
+                href="/dashboard" 
+                className="flex flex-row items-center px-4 py-2.5 gap-[16px] w-full rounded-lg bg-[#FCEFF4] text-[#DE5D8F] border-l-4 border-[#DE5D8F] font-bold transition-all"
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6 flex-shrink-0">
+                  <rect x="3" y="3" width="7" height="9" />
+                  <rect x="14" y="3" width="7" height="5" />
+                  <rect x="14" y="12" width="7" height="9" />
+                  <rect x="3" y="16" width="7" height="5" />
+                </svg>
+                <span className="text-[17px] font-semibold" style={fontChula}>Dashboard Overview</span>
               </Link>
 
-              {/* Component 34: All Articles (Home) */}
-              <Link href="/home" className="flex flex-row justify-center items-center p-0 gap-[16px] w-full h-[34px] bg-[#FCEFF4] hover:bg-[#F5CDDC]/50 transition-all">
-                <div className="flex flex-row items-center p-0 gap-[16px] w-[168px] h-[24px]">
-                  {/* book-open-text icon */}
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#545455" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
-                    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
-                    <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
-                    <path d="M6 8h2" />
-                    <path d="M6 12h2" />
-                    <path d="M16 8h2" />
-                    <path d="M16 12h2" />
-                  </svg>
-                  <span className="text-[18px] font-bold text-[#545455]" style={fontChula}>บทความทั้งหมด</span>
-                </div>
+              {/* User Management */}
+              <Link 
+                href="/dashboard/users" 
+                className="flex flex-row items-center px-4 py-2.5 gap-[16px] w-full rounded-lg hover:bg-slate-50 text-[#545455] transition-all"
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6 flex-shrink-0">
+                  <circle cx="12" cy="7" r="4" />
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                </svg>
+                <span className="text-[17px] font-semibold" style={fontChula}>User Management</span>
               </Link>
 
-              {/* Component 36: Write Article */}
-              <Link href="/dashboard" onClick={(e) => { e.preventDefault(); alert("ระบบเขียนบทความสาราณียากร (Mock)"); }} className="flex flex-row justify-center items-center p-0 gap-[16px] w-full h-[34px] bg-[#FCEFF4] hover:bg-[#F5CDDC]/50 transition-all">
-                <div className="flex flex-row items-center p-0 gap-[16px] w-[168px] h-[24px]">
-                  {/* add icon */}
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#545455" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
-                    <line x1="12" y1="5" x2="12" y2="19" />
-                    <line x1="5" y1="12" x2="19" y2="12" />
-                  </svg>
-                  <span className="text-[18px] font-bold text-[#545455]" style={fontChula}>เขียนบทความ</span>
-                </div>
+              {/* Approval */}
+              <Link 
+                href="/dashboard/approval" 
+                className="flex flex-row items-center px-4 py-2.5 gap-[16px] w-full rounded-lg hover:bg-slate-50 text-[#545455] transition-all"
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6 flex-shrink-0">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                  <polyline points="22 4 12 14.01 9 11.01" />
+                </svg>
+                <span className="text-[17px] font-semibold" style={fontChula}>Approval</span>
               </Link>
 
-              {/* อนุมัติรีวิว */}
-              <Link href="/dashboard/approval" className="flex flex-row justify-center items-center p-0 gap-[16px] w-full h-[34px] bg-[#FCEFF4] hover:bg-[#F5CDDC]/50 transition-all">
-                <div className="flex flex-row items-center p-0 gap-[16px] w-[168px] h-[24px]">
-                  {/* check icon */}
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#545455" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
-                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-                    <polyline points="22 4 12 14.01 9 11.01" />
-                  </svg>
-                  <span className="text-[18px] font-bold text-[#545455]" style={fontChula}>อนุมัติรีวิว</span>
-                </div>
-              </Link>
-
-              {/* Component 37: Settings (Profile) */}
-              <Link href="/profile" className="flex flex-row justify-center items-center p-0 gap-[16px] w-full h-[34px] bg-[#FCEFF4] hover:bg-[#F5CDDC]/50 transition-all">
-                <div className="flex flex-row items-center p-0 gap-[16px] w-[168px] h-[24px]">
-                  {/* settings icon */}
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#545455" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
-                    <circle cx="12" cy="12" r="3" />
-                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-                  </svg>
-                  <span className="text-[18px] font-bold text-[#545455]" style={fontChula}>ตั้งค่า</span>
-                </div>
-              </Link>
-
+              {/* Audit Log */}
+              <button 
+                onClick={() => alert("Audit Log feature is mocked.")} 
+                className="flex flex-row items-center px-4 py-2.5 gap-[16px] w-full rounded-lg hover:bg-slate-50 text-[#545455] text-left transition-all cursor-pointer"
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6 flex-shrink-0">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <polyline points="14 2 14 8 20 8" />
+                  <line x1="16" y1="13" x2="8" y2="13" />
+                  <line x1="16" y1="17" x2="8" y2="17" />
+                </svg>
+                <span className="text-[17px] font-semibold" style={fontChula}>Audit Log</span>
+              </button>
             </nav>
           </div>
 
-          {/* Component 38: Logout (Frame 6634) */}
-          <div className="flex flex-col items-center p-0 gap-[40px] w-full">
+          {/* Sign out Action */}
+          <div className="flex flex-col items-center p-0 w-full mt-auto">
             <button
               onClick={handleLogout}
-              className="flex flex-row justify-center items-center p-0 gap-[16px] w-full h-[34px] bg-[#FCEFF4] hover:bg-rose-100 text-[#545455] hover:text-rose-600 transition-all cursor-pointer"
+              className="flex flex-row items-center px-4 py-2.5 gap-[16px] w-full rounded-lg hover:bg-red-50 text-[#545455] hover:text-red-500 transition-all cursor-pointer"
             >
-              <div className="flex flex-row items-center p-0 gap-[16px] w-[168px] h-[24px]">
-                {/* log-out icon */}
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
-                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                  <polyline points="16 17 21 12 16 7" />
-                  <line x1="21" y1="12" x2="9" y2="12" />
-                </svg>
-                <span className="text-[18px] font-bold" style={fontChula}>ออกจากระบบ</span>
-              </div>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6 flex-shrink-0">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                <polyline points="16 17 21 12 16 7" />
+                <line x1="21" y1="12" x2="9" y2="12" />
+              </svg>
+              <span className="text-[17px] font-semibold" style={fontChula}>Sign out</span>
             </button>
           </div>
 
@@ -470,7 +463,6 @@ function DashboardContent() {
                 </h2>
                 <div className="mt-3 bg-[#FCEFF4] border border-[#F5CDDC]/60 rounded-xl p-3.5 space-y-2 text-xs">
                   <div className="truncate"><span className="font-semibold text-slate-500">Email:</span> <span className="text-[#9E4266] font-bold">{user?.email}</span></div>
-                  <div className="truncate"><span className="font-semibold text-slate-500">UID:</span> <span className="font-mono text-[10px] text-slate-700">{user?.uid}</span></div>
                   <div>
                     <span className="font-semibold text-slate-500">บทบาทสิทธิ์:</span>{" "}
                     <span className="inline-flex px-2 py-0.5 rounded text-[10px] font-extrabold uppercase bg-rose-50 text-rose-600 border border-rose-200">

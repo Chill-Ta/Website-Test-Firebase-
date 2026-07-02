@@ -1,7 +1,7 @@
 import { HelpRepository } from "@/domain/repositories/help.repository";
 
 export class FirebaseHelpRepository implements HelpRepository {
-  private apiBase = "http://localhost:3000";
+  private apiBase = "http://localhost:8080";
 
   async fetchFAQs(): Promise<any[]> {
     const res = await fetch(`${this.apiBase}/faqs/`, {

@@ -53,13 +53,23 @@ function HomeContent() {
   // States
   const [isInternshipDropdownOpen, setIsInternshipDropdownOpen] = useState(false);
   const [isLoginDropdownOpen, setIsLoginDropdownOpen] = useState(false);
+  const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const [bookmarkedArticles, setBookmarkedArticles] = useState<Record<string, boolean>>({});
+
+  React.useEffect(() => {
+    if (user) {
+      setIsLoginDropdownOpen(false);
+    }
+  }, [user]);
+
+  const emailPrefix = user?.email ? user.email.split("@")[0] : "?";
+  const avatarChar = emailPrefix.charAt(0).toUpperCase();
 
   // Logout handler
   async function handleLogout() {
     try {
       await logoutUseCase.execute();
-      router.push("/login");
+      router.push("/home");
     } catch (err) {
       console.error("Logout error:", err);
     }
@@ -238,13 +248,13 @@ function HomeContent() {
           <div className="flex items-center gap-2">
             {user ? (
               <>
-                <Link
-                  href="/profile"
-                  className="h-[35px] px-4 bg-white border border-[#DE5D8F] hover:bg-[#FCEFF4] text-[#DE5D8F] shadow-[0px_4px_4px_rgba(0,0,0,0.15)] rounded-lg text-[13.7px] font-bold flex items-center justify-center gap-1.5 transition-all"
+                <button
+                  onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
+                  className="h-[35px] px-4 bg-white border border-[#DE5D8F] hover:bg-[#FCEFF4] text-[#DE5D8F] shadow-[0px_4px_4px_rgba(0,0,0,0.15)] rounded-lg text-[13.7px] font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer"
                 >
                   <span>👤</span>
-                  <span className="hidden sm:inline">โปรไฟล์</span>
-                </Link>
+                  <span className="hidden sm:inline">จัดการบัญชี</span>
+                </button>
                 <button
                   onClick={handleLogout}
                   className="h-[35px] px-4 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg text-[13.7px] font-bold flex items-center justify-center transition-all cursor-pointer"
@@ -309,18 +319,6 @@ function HomeContent() {
                       {role || "-"}
                     </span>
                   </div>
-                  <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
-                    <span className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">สถานะระบบ</span>
-                    <span className="text-[12px] font-bold text-emerald-500 flex items-center gap-1.5">
-                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                      ออนไลน์
-                    </span>
-                  </div>
-                </div>
-
-                <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
-                  <span className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">รหัสผู้ใช้งาน (UID)</span>
-                  <span className="text-[11px] font-mono text-slate-500 break-all">{user?.uid || "-"}</span>
                 </div>
               </div>
             ) : (
@@ -796,6 +794,107 @@ function HomeContent() {
               {loading ? "กำลังเข้าสู่ระบบ..." : "เข้าสู่ระบบ"}
             </button>
           </form>
+        </div>
+      )}
+
+      {/* Profile Dropdown Overlay Container */}
+      {isProfileDropdownOpen && user && (
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "flex-start",
+            padding: "48px 48px",
+            gap: "28px",
+            position: "absolute",
+            width: "613px",
+            height: "585px",
+            background: "#F7F8F9",
+            boxShadow: "4px 8px 10.2px rgba(0, 0, 0, 0.25)",
+            borderRadius: "16px",
+            zIndex: 50,
+            boxSizing: "border-box",
+          }}
+          className="w-[90vw] md:w-[613px] top-[111px] left-1/2 -translate-x-1/2 xl:left-[628px] xl:translate-x-0 text-left font-sans"
+        >
+          {/* Close button */}
+          <button
+            onClick={() => setIsProfileDropdownOpen(false)}
+            className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 text-xl font-bold cursor-pointer transition-colors"
+          >
+            ✕
+          </button>
+
+          {/* User Details Header */}
+          <div className="flex items-center gap-6 w-full">
+            {/* Avatar Circle */}
+            <div className="w-[110px] h-[110px] rounded-full border-2 border-slate-300 bg-white flex items-center justify-center text-slate-400 font-extrabold text-4xl shadow-inner select-none">
+              {avatarChar}
+            </div>
+
+            {/* Detail info */}
+            <div className="flex flex-col gap-1 text-[15px] text-[#404041] font-bold">
+              <div className="text-[17px] font-extrabold text-slate-800">{emailPrefix}</div>
+              <div className="text-slate-400 font-semibold text-xs mb-1">นิสิตอักษรศาสตร์</div>
+              <div>รหัสนิสิต 66xxxxxx</div>
+              <div>เอกสาขาวิชา: ศิลปการละคร</div>
+              <div>โทสาขาวิชา: -</div>
+            </div>
+          </div>
+
+          {/* Menu Card */}
+          <div className="w-full bg-white rounded-2xl border border-slate-200/60 p-6 flex flex-col gap-4 shadow-sm">
+            <a
+              href="#services"
+              onClick={() => setIsProfileDropdownOpen(false)}
+              className="flex items-center gap-3 text-[17px] font-extrabold text-slate-700 hover:text-[#DE5D8F] transition-all"
+            >
+              <span className="text-xl">🔖</span> ที่บันทึกไว้
+            </a>
+            <div className="h-[1px] bg-slate-100 w-full" />
+            <Link
+              href="/profile"
+              onClick={() => setIsProfileDropdownOpen(false)}
+              className="flex items-center gap-3 text-[17px] font-extrabold text-slate-700 hover:text-[#DE5D8F] transition-all"
+            >
+              <span className="text-xl">🕒</span> ประวัติการวางแผนหน่วยกิต
+            </Link>
+            <div className="h-[1px] bg-slate-100 w-full" />
+            <Link
+              href="/profile"
+              onClick={() => setIsProfileDropdownOpen(false)}
+              className="flex items-center gap-3 text-[17px] font-extrabold text-slate-700 hover:text-[#DE5D8F] transition-all"
+            >
+              <span className="text-xl">👤</span> จัดการบัญชี
+            </Link>
+            {role === "admin" && (
+              <>
+                <div className="h-[1px] bg-slate-100 w-full" />
+                <Link
+                  href="/dashboard"
+                  onClick={() => setIsProfileDropdownOpen(false)}
+                  className="flex items-center gap-3 text-[17px] font-extrabold text-slate-700 hover:text-[#DE5D8F] transition-all"
+                >
+                  <span className="text-xl">📊</span> แดชบอร์ด (Dashboard)
+                </Link>
+              </>
+            )}
+          </div>
+
+          {/* Logout footer button */}
+          <div className="w-full flex justify-end mt-auto">
+            <div className="bg-white rounded-xl shadow-md border border-slate-100 hover:shadow-lg transition-all">
+              <button
+                onClick={() => {
+                  setIsProfileDropdownOpen(false);
+                  handleLogout();
+                }}
+                className="h-11 px-6 text-slate-600 hover:text-red-600 font-bold flex items-center justify-center transition-all cursor-pointer text-sm"
+              >
+                ออกจากระบบ
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

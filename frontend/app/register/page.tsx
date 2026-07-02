@@ -94,8 +94,8 @@ export default function RegisterPage() {
 
         <div className="mt-8 text-center text-sm text-slate-400">
           มีบัญชีแล้ว?{" "}
-          <Link href="/login" className="text-[#DE5D8F] hover:text-[#DE5D8F]/80 font-bold transition-colors underline">
-            เข้าสู่ระบบ
+          <Link href="/home" className="text-[#DE5D8F] hover:text-[#DE5D8F]/80 font-bold transition-colors underline">
+            เข้าสู่ระบบที่หน้าหลัก
           </Link>
         </div>
       </div>
