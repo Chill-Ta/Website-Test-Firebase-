@@ -9,6 +9,7 @@ export interface AuthRepository {
   getIdToken(forceRefresh?: boolean): Promise<string>;
   fetchProfile(idToken: string): Promise<{ uid: string; message: string; role: string }>;
   fetchUsers(idToken: string): Promise<User[]>;
+  updateUserRole(idToken: string, uid: string, role: string): Promise<void>;
   changePassword(oldPassword: string, newPassword: string): Promise<void>;
 }
 

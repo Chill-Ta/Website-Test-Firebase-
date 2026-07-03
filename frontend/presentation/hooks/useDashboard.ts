@@ -8,6 +8,7 @@ import {
 	fetchUsersUseCase,
 	fetchContactsUseCase,
 	replyContactUseCase,
+	updateUserRoleUseCase,
 	authRepository,
 } from "@/di";
 import { sanitizeError } from "@/lib/error-helper";
@@ -106,6 +107,16 @@ export function useDashboard() {
     }
   }
 
+  async function updateUserRole(uid: string, role: string) {
+    try {
+      await updateUserRoleUseCase.execute(uid, role);
+      await fetchUsersList();
+    } catch (err: unknown) {
+      setUsersError(sanitizeError(err, "admin"));
+      throw err;
+    }
+  }
+
   return {
     user,
     loading,
@@ -123,5 +134,6 @@ export function useDashboard() {
     contactsError,
     fetchContactsList,
     replyToContact,
+    updateUserRole,
   };
 }

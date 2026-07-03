@@ -1,0 +1,14 @@
+- [x] Update backend registration logic to force the role to `"student"`
+- [x] Add `UpdateRole` to backend `UserRepository`
+- [x] Implement `UpdateRole` in Firestore `userRepository`
+- [x] Add `UpdateUserRole` to `AdminUsecase` and implement it
+- [x] Implement `UpdateUserRole` handler in rest handler
+- [x] Register new endpoint `PUT /admin/users/:uid/role` in backend routes
+- [x] Add `updateUserRole` method to frontend `AuthRepository` interface
+- [x] Implement `updateUserRole` in `FirebaseAuthRepository`
+- [x] Create `UpdateUserRoleUseCase` in frontend
+- [x] Register `UpdateUserRoleUseCase` in frontend `di/index.ts`
+- [x] Add `updateUserRole` method to `useDashboard.ts` hook
+- [x] Remove role selection dropdown from frontend register page (`frontend/app/register/page.tsx`)
+- [x] Replace static role badge in frontend dashboard user table (`frontend/app/dashboard/page.tsx`) with a select dropdown
+- [/] Verify implementation by building frontend and backend

@@ -34,6 +34,7 @@ function DashboardContent() {
     contactsError,
     fetchContactsList,
     replyToContact,
+    updateUserRole,
   } = useDashboard();
 
   useEffect(() => {
@@ -673,12 +674,31 @@ function DashboardContent() {
                             </div>
                           </td>
                           <td className="px-5 py-5 text-center">
-                            <span className={`inline-flex px-2 py-0.5 rounded text-[10px] font-extrabold border uppercase tracking-wider ${u.role === "admin"
-                              ? "bg-rose-50 text-rose-600 border-rose-100"
-                              : "bg-indigo-50 text-indigo-600 border-indigo-100"
-                              }`}>
-                              {u.role}
-                            </span>
+                            <select
+                              value={u.role}
+                              disabled={u.uid === user?.uid}
+                              onChange={async (e) => {
+                                const newRole = e.target.value;
+                                if (confirm(`คุณต้องการเปลี่ยนบทบาทของผู้ใช้นี้เป็น ${newRole} ใช่หรือไม่?`)) {
+                                  try {
+                                    await updateUserRole(u.uid, newRole);
+                                  } catch (err: any) {
+                                    alert(err.message || "เกิดข้อผิดพลาดในการอัปเดตบทบาท");
+                                  }
+                                }
+                              }}
+                              className={`px-2 py-1 rounded text-[10px] font-extrabold border uppercase tracking-wider outline-none cursor-pointer transition-all ${
+                                u.role === "admin"
+                                  ? "bg-rose-50 text-rose-600 border-rose-200 focus:border-rose-400"
+                                  : "bg-indigo-50 text-indigo-600 border-indigo-200 focus:border-indigo-400"
+                              } disabled:opacity-60 disabled:cursor-not-allowed`}
+                              style={fontChula}
+                            >
+                              <option value="student">student</option>
+                              <option value="teacher">teacher</option>
+                              <option value="club-member">club-member</option>
+                              <option value="admin">admin</option>
+                            </select>
                           </td>
                         </tr>
                       ))

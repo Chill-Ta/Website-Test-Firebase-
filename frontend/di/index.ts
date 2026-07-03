@@ -16,6 +16,7 @@ import { ReplyContactUseCase } from "@/domain/use-cases/reply-contact.use-case";
 import { FetchReviewsUseCase } from "@/domain/use-cases/fetch-reviews.use-case";
 import { ApproveReviewUseCase } from "@/domain/use-cases/approve-review.use-case";
 import { DeleteReviewUseCase } from "@/domain/use-cases/delete-review.use-case";
+import { UpdateUserRoleUseCase } from "@/domain/use-cases/update-user-role.use-case";
 
 export const authRepository = new FirebaseAuthRepository(auth);
 const helpRepository = new FirebaseHelpRepository();
@@ -35,3 +36,4 @@ export const replyContactUseCase = new ReplyContactUseCase(helpRepository);
 export const fetchReviewsUseCase = new FetchReviewsUseCase(reviewRepository);
 export const approveReviewUseCase = new ApproveReviewUseCase(reviewRepository);
 export const deleteReviewUseCase = new DeleteReviewUseCase(reviewRepository);
+export const updateUserRoleUseCase = new UpdateUserRoleUseCase(authRepository);

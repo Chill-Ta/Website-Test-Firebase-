@@ -63,22 +63,6 @@ export default function RegisterPage() {
             />
           </div>
 
-          <div>
-            <label htmlFor="role" className="block text-sm font-bold text-slate-500 mb-2">
-              บทบาทผู้ใช้งาน (Role)
-            </label>
-            <select
-              id="role"
-              value={role}
-              onChange={(e) => setRole(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-300 focus:border-[#DE5D8F] focus:ring-1 focus:ring-[#DE5D8F] rounded-xl px-4 py-3 text-sm text-[#404041] outline-none transition-all cursor-pointer"
-            >
-              <option value="student">นิสิต (Student)</option>
-              <option value="teacher">อาจารย์ (Teacher)</option>
-              <option value="club-member">สมาชิกชมรม (Club Member)</option>
-            </select>
-          </div>
-
           <button
             type="submit"
             disabled={loading}

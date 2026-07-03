@@ -120,6 +120,22 @@ export class FirebaseAuthRepository implements AuthRepository {
     }));
   }
 
+  async updateUserRole(idToken: string, uid: string, role: string): Promise<void> {
+    const res = await fetch(`${this.apiBase}/admin/users/${uid}/role`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${idToken}`,
+      },
+      body: JSON.stringify({ role }),
+    });
+
+    if (!res.ok) {
+      const data = await res.json();
+      throw new Error(data.error || "ไม่สามารถอัปเดตบทบาทผู้ใช้ได้");
+    }
+  }
+
   async changePassword(oldPassword: string, newPassword: string): Promise<void> {
     const user = this.auth.currentUser;
     if (!user || !user.email) {

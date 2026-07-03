@@ -58,10 +58,8 @@ func (u *registerUsecase) Register(req RegisterRequest) error {
 	}
 
 	// 2. บันทึกลง Firestore
-	role := req.Role
-	if role != "student" && role != "teacher" && role != "club-member" && role != "admin" {
-		role = "student"
-	}
+	// หน้า registration ไม่สามารถเลือก role เองได้ บทบาทเริ่มต้นเป็น student เสมอ
+	role := "student"
 
 	user := &domain.User{
 		FirebaseUID: firebaseUser.UID,

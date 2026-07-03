@@ -3,6 +3,7 @@ package firestore
 import (
 	"context"
 	"errors"
+	"time"
 
 	"cloud.google.com/go/firestore"
 	"google.golang.org/api/iterator"
@@ -75,4 +76,13 @@ func (r *userRepository) GetAllUsers() ([]*domain.User, error) {
 		users = append(users, &user)
 	}
 	return users, nil
+}
+
+func (r *userRepository) UpdateRole(uid string, role string) error {
+	ctx := context.Background()
+	_, err := r.db.Collection("users").Doc(uid).Update(ctx, []firestore.Update{
+		{Path: "role", Value: role},
+		{Path: "updated_at", Value: time.Now()},
+	})
+	return err
 }
